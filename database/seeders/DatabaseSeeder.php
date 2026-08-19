@@ -18,6 +18,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        User::updateOrCreate(
+            ['email' => env('ADMIN_EMAIL', 'admin@example.com')],
+            [
+                'name' => 'RozeHub Administrator',
+                'password' => env('ADMIN_PASSWORD', 'ChangeThisStrongPassword!'),
+                'is_admin' => true,
+            ]
+        );
+
         $projects = [
             ['name' => 'DBNavigator', 'slug' => 'dbnavigator', 'tagline' => 'A focused database client for serious data work.', 'description' => 'Browse schemas, write queries, and understand your data without leaving your flow.', 'category' => 'Database client', 'accent' => 'mint', 'icon' => 'D', 'version' => '1.4.0', 'platform' => 'Windows', 'downloads' => 1842, 'notes' => 'Query history, connection profiles, and a faster table explorer.'],
             ['name' => 'ThunderCall', 'slug' => 'thundercall', 'tagline' => 'API testing with a calmer, faster workflow.', 'description' => 'Build requests, inspect responses, and share repeatable collections with your team.', 'category' => 'API client', 'accent' => 'coral', 'icon' => 'T', 'version' => '0.9.2', 'platform' => 'Linux', 'downloads' => 963, 'notes' => 'Collections now support environment variables and importable request groups.'],

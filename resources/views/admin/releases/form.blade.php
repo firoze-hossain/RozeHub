@@ -1,0 +1,13 @@
+@extends('admin.layout')
+@section('content')
+<div class="admin-page-head"><div><span>RELEASE</span><h2>{{ $mode==='create'?'Upload a release':'Edit release' }}</h2><p>Packages are stored privately and delivered through the authenticated download endpoint.</p></div><a class="admin-secondary" href="{{ route('admin.releases.index') }}">← Back</a></div>
+<form class="admin-form-card" method="POST" enctype="multipart/form-data" action="{{ $mode==='create'?route('admin.releases.store'):route('admin.releases.update',$release) }}">@csrf @if($mode==='edit')@method('PUT')@endif
+<div class="form-grid two"><label>Software<select name="software_project_id" required><option value="">Choose software</option>@foreach($projects as $p)<option value="{{ $p->id }}" @selected(old('software_project_id',$release->software_project_id)==$p->id)>{{ $p->name }}</option>@endforeach</select></label><label>Version<input name="version" value="{{ old('version',$release->version) }}" placeholder="1.4.0" required></label></div>
+<div class="form-grid three"><label>Platform<select name="platform">@foreach(['Windows','macOS','Linux'] as $v)<option @selected(old('platform',$release->platform)===$v)>{{ $v }}</option>@endforeach</select></label><label>Architecture<select name="architecture">@foreach(['x64','ARM64'] as $v)<option @selected(old('architecture',$release->architecture)===$v)>{{ $v }}</option>@endforeach</select></label><label>Channel<select name="channel">@foreach(['Stable','Beta','Nightly'] as $v)<option @selected(old('channel',$release->channel)===$v)>{{ $v }}</option>@endforeach</select></label></div>
+<label>Package file <span class="hint">Maximum 1 GB; actual limit also depends on cPanel PHP upload settings.</span><input class="file-drop" type="file" name="package" {{ $mode==='create'?'required':'' }}></label>
+@if($mode==='edit' && $release->file_name)<div class="current-file">Current package: <strong>{{ $release->file_name }}</strong></div>@endif
+<label>Release notes<textarea name="notes" placeholder="What changed in this version?">{{ old('notes',$release->notes) }}</textarea></label>
+<label class="check-line"><input type="checkbox" name="is_published" value="1" @checked(old('is_published',$release->is_published))><span>Publish this release immediately</span></label>
+<div class="form-actions"><a class="admin-secondary" href="{{ route('admin.releases.index') }}">Cancel</a><button class="admin-primary" type="submit">{{ $mode==='create'?'Upload & save':'Save release' }}</button></div>
+</form>
+@endsection

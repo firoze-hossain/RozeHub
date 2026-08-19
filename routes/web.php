@@ -1,10 +1,29 @@
 <?php
-
-use App\Http\Controllers\ReleaseDownloadController;
-use App\Livewire\Hub;
-use App\Livewire\ReleaseStudio;
-use Illuminate\Support\Facades\Route;
-
-Route::get('/', Hub::class)->name('hub');
-Route::get('/studio', ReleaseStudio::class)->name('studio');
-Route::get('/download/{release}', ReleaseDownloadController::class)->name('releases.download');
+use App\Http\Controllers\AdminAuthController; use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\AdminAccountController; use App\Http\Controllers\AdminProjectController; use App\Http\Controllers\AdminReleaseController; use App\Http\Controllers\AdminReviewController; use App\Http\Controllers\ReleaseDownloadController; use App\Livewire\Hub; use Illuminate\Support\Facades\Route;
+Route::get('/',Hub::class)->name('hub');
+Route::get('/download/{release}',ReleaseDownloadController::class)->name('releases.download');
+Route::get('/admin/login',[AdminAuthController::class,'showLogin'])->name('admin.login');
+Route::post('/admin/login',[AdminAuthController::class,'login'])->name('admin.login.submit');
+Route::post('/admin/logout',[AdminAuthController::class,'logout'])->name('admin.logout');
+Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(function(){
+ Route::get('/',[AdminDashboardController::class,'index'])->name('dashboard');
+ Route::get('/account',[AdminAccountController::class,'edit'])->name('account');
+ Route::put('/account',[AdminAccountController::class,'update'])->name('account.update');
+ Route::get('/projects',[AdminProjectController::class,'index'])->name('projects.index');
+ Route::get('/projects/create',[AdminProjectController::class,'create'])->name('projects.create');
+ Route::post('/projects',[AdminProjectController::class,'store'])->name('projects.store');
+ Route::get('/projects/{project}/edit',[AdminProjectController::class,'edit'])->name('projects.edit');
+ Route::put('/projects/{project}',[AdminProjectController::class,'update'])->name('projects.update');
+ Route::delete('/projects/{project}',[AdminProjectController::class,'destroy'])->name('projects.destroy');
+ Route::get('/releases',[AdminReleaseController::class,'index'])->name('releases.index');
+ Route::get('/releases/create',[AdminReleaseController::class,'create'])->name('releases.create');
+ Route::post('/releases',[AdminReleaseController::class,'store'])->name('releases.store');
+ Route::get('/releases/{release}/edit',[AdminReleaseController::class,'edit'])->name('releases.edit');
+ Route::put('/releases/{release}',[AdminReleaseController::class,'update'])->name('releases.update');
+ Route::post('/releases/{release}/toggle',[AdminReleaseController::class,'toggle'])->name('releases.toggle');
+ Route::delete('/releases/{release}',[AdminReleaseController::class,'destroy'])->name('releases.destroy');
+ Route::get('/reviews',[AdminReviewController::class,'index'])->name('reviews.index');
+ Route::post('/reviews/{review}/toggle',[AdminReviewController::class,'toggle'])->name('reviews.toggle');
+ Route::delete('/reviews/{review}',[AdminReviewController::class,'destroy'])->name('reviews.destroy');
+});

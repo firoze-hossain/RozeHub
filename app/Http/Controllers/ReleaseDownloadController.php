@@ -13,8 +13,8 @@ class ReleaseDownloadController extends Controller
 
         $release->increment('downloads_count');
 
-        abort_unless($release->file_path && Storage::disk('public')->exists($release->file_path), 404, 'The release package has not been uploaded yet.');
+        abort_unless($release->file_path && Storage::disk('local')->exists($release->file_path), 404, 'The release package has not been uploaded yet.');
 
-        return Storage::disk('public')->download($release->file_path, $release->file_name);
+        return Storage::disk('local')->download($release->file_path, $release->file_name);
     }
 }

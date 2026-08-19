@@ -3,41 +3,84 @@
 RozeHub is a Laravel + Livewire software distribution portal for DBNavigator,
 ThunderCall, StratosDB, Lumina, Roze, Roze OS, and Trackline.
 
-## Included
+## Hosting target
 
-- Searchable catalog with Windows, macOS, and Linux filters
-- Release packages, per-package download counts, and release notes
-- Community ratings and reviews
-- Publisher Studio at `/studio` for uploading new version packages
-- MySQL configuration through Laravel's `mysql` database driver
+This version is deliberately **Node.js/npm-free** for cPanel/shared hosting.
 
-## Local setup
+- Laravel + PHP only
+- Blade + CSS for the UI
+- Existing public RozeHub design retained
+- Livewire uses the Laravel package already included in `vendor/`; no npm build is required
+- CSS is served directly from `public/css/rozehub.css`
+- No Vite, Tailwind build, Node.js or npm is required on the server
+- Release packages are stored privately and downloaded through Laravel
 
-Create the MySQL database and a dedicated user, then put those credentials in
-`.env`:
+## Admin panel
 
-```sql
-CREATE DATABASE rozehub CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'rozehub'@'localhost' IDENTIFIED BY 'change-this-password';
-GRANT ALL PRIVILEGES ON rozehub.* TO 'rozehub'@'localhost';
-FLUSH PRIVILEGES;
-```
+Open:
+
+`/admin/login`
+
+The database seeder creates the administrator from:
 
 ```dotenv
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=rozehub
-DB_USERNAME=rozehub
-DB_PASSWORD=change-this-password
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=ChangeThisStrongPassword!
 ```
 
-Then run:
+Change both values in `.env` before running the seeder.
+
+The admin panel controls:
+
+- Dashboard and download statistics
+- Software projects: create, edit and delete
+- Releases: upload, edit, publish, unpublish and delete
+- Windows / macOS / Linux and x64 / ARM64 packages
+- Release notes and channels
+- Community reviews: approve, hide and delete
+
+## cPanel deployment
+
+1. Upload the project, including the existing `vendor/` directory.
+2. Point the domain/subdomain document root to the Laravel `public` directory.
+3. Create a MySQL database and user in cPanel.
+4. Copy `.env.example` to `.env` and set `APP_KEY`, database credentials, `APP_URL`, `ADMIN_EMAIL` and `ADMIN_PASSWORD`.
+5. Run the migrations/seeder if your hosting provides Laravel/SSH access:
 
 ```bash
-php artisan migrate --seed
-php artisan storage:link
-php artisan serve
+php artisan migrate --seed --force
 ```
 
-Open `http://127.0.0.1:8000`.
+### No-terminal cPanel option
+
+If your cPanel account has **no terminal/SSH**, import `database/cpanel_install.sql` through phpMyAdmin. It creates the core tables and starter catalog, including the initial administrator:
+
+- Email: `admin@example.com`
+- Password: `ChangeThisStrongPassword!`
+
+Immediately change the administrator password from **Admin → Account & security**.
+
+The application itself does not need npm or Node.
+
+### Important PHP upload settings
+
+Large installers are limited by the server's PHP settings. For packages up to 1 GB, configure the cPanel PHP INI editor with appropriate values for:
+
+```ini
+upload_max_filesize = 1024M
+post_max_size = 1024M
+max_execution_time = 300
+max_input_time = 300
+```
+
+The actual maximum is controlled by the hosting provider.
+
+### Storage permissions
+
+Laravel needs write access to:
+
+- `storage/app/private`
+- `storage/framework`
+- `storage/logs`
+
+Release packages are intentionally kept outside the public web directory and streamed through `/download/{release}`.

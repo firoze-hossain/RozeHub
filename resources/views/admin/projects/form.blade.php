@@ -1,0 +1,10 @@
+@extends('admin.layout')
+@section('content')
+<div class="admin-page-head"><div><span>SOFTWARE</span><h2>{{ $mode === 'create' ? 'Add a new product' : 'Edit '.$project->name }}</h2><p>These details appear across the public catalog.</p></div><a class="admin-secondary" href="{{ route('admin.projects.index') }}">← Back</a></div>
+<form class="admin-form-card" method="POST" action="{{ $mode==='create'?route('admin.projects.store'):route('admin.projects.update',$project) }}">@csrf @if($mode==='edit')@method('PUT')@endif
+<div class="form-grid two"><label>Name<input name="name" value="{{ old('name',$project->name) }}" required></label><label>Slug<input name="slug" value="{{ old('slug',$project->slug) }}" placeholder="auto-generated if blank"></label></div>
+<label>Tagline<input name="tagline" value="{{ old('tagline',$project->tagline) }}" required></label><label>Description<textarea name="description" required>{{ old('description',$project->description) }}</textarea></label>
+<div class="form-grid three"><label>Category<input name="category" value="{{ old('category',$project->category) }}" required></label><label>Icon<input name="icon" value="{{ old('icon',$project->icon ?: 'R') }}" maxlength="8" required></label><label>Accent<select name="accent">@foreach(['mint','coral','lilac','gold','blue'] as $accent)<option {{ old('accent',$project->accent)===$accent?'selected':'' }}>{{ $accent }}</option>@endforeach</select></label></div>
+<label>Website URL<input type="url" name="website" value="{{ old('website',$project->website) }}" placeholder="https://..."></label><div class="form-actions"><a class="admin-secondary" href="{{ route('admin.projects.index') }}">Cancel</a><button class="admin-primary" type="submit">{{ $mode==='create'?'Create software':'Save changes' }}</button></div>
+</form>
+@endsection
