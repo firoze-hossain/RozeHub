@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{ $title ?? config('app.name', 'RozeHub') }}</title>
+<link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/rozehub-icon.png') }}">
+<link rel="apple-touch-icon" href="{{ asset('images/rozehub-icon.png') }}">
 <link rel="stylesheet" href="{{ asset('css/rozehub.css') }}">
 @livewireStyles
 </head>

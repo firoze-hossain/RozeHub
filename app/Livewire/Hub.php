@@ -27,6 +27,20 @@ class Hub extends Component
         $this->resetValidation();
     }
 
+
+    public function projectImageFor(string $slug): ?string
+    {
+        return [
+            'dbnavigator' => 'dbnavigator.png',
+            'thundercall' => 'thundercall.png',
+            'stratosdb' => 'stratosdb.png',
+            'lumina' => 'lumina.png',
+            'roze-language' => 'roze.png',
+            'roze-os' => 'novaos.png',
+            'trackline' => 'trackeye.png',
+        ][$slug] ?? null;
+    }
+
     public function saveReview(): void
     {
         $this->validate([
