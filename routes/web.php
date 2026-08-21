@@ -1,6 +1,8 @@
 <?php
 use App\Http\Controllers\AdminAuthController; use App\Http\Controllers\AdminDashboardController;
-use App\Http\Controllers\AdminAccountController; use App\Http\Controllers\AdminProjectController; use App\Http\Controllers\AdminReleaseController; use App\Http\Controllers\AdminReviewController; use App\Http\Controllers\ReleaseDownloadController; use App\Livewire\Hub; use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AdminAccountController; use App\Http\Controllers\AdminProjectController; use App\Http\Controllers\AdminReleaseController; use App\Http\Controllers\AdminReviewController; use App\Http\Controllers\ReleaseDownloadController;
+use App\Http\Controllers\NovaosAdminController;
+use App\Http\Controllers\NovaosReleaseController; use App\Livewire\Hub; use Illuminate\Support\Facades\Route;
 Route::get('/',Hub::class)->name('hub');
 Route::get('/download/{release}',ReleaseDownloadController::class)->name('releases.download');
 Route::get('/admin/login',[AdminAuthController::class,'showLogin'])->name('admin.login');
@@ -23,6 +25,14 @@ Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(func
  Route::put('/releases/{release}',[AdminReleaseController::class,'update'])->name('releases.update');
  Route::post('/releases/{release}/toggle',[AdminReleaseController::class,'toggle'])->name('releases.toggle');
  Route::delete('/releases/{release}',[AdminReleaseController::class,'destroy'])->name('releases.destroy');
+ Route::get('/novaos',[NovaosAdminController::class,'index'])->name('novaos.index');
+ Route::get('/novaos/releases',[NovaosReleaseController::class,'index'])->name('novaos.releases.index');
+ Route::get('/novaos/releases/create',[NovaosReleaseController::class,'create'])->name('novaos.releases.create');
+ Route::post('/novaos/releases',[NovaosReleaseController::class,'store'])->name('novaos.releases.store');
+ Route::get('/novaos/releases/{release}/edit',[NovaosReleaseController::class,'edit'])->name('novaos.releases.edit');
+ Route::put('/novaos/releases/{release}',[NovaosReleaseController::class,'update'])->name('novaos.releases.update');
+ Route::post('/novaos/releases/{release}/toggle',[NovaosReleaseController::class,'toggle'])->name('novaos.releases.toggle');
+ Route::delete('/novaos/releases/{release}',[NovaosReleaseController::class,'destroy'])->name('novaos.releases.destroy');
  Route::get('/reviews',[AdminReviewController::class,'index'])->name('reviews.index');
  Route::post('/reviews/{review}/toggle',[AdminReviewController::class,'toggle'])->name('reviews.toggle');
  Route::delete('/reviews/{review}',[AdminReviewController::class,'destroy'])->name('reviews.destroy');

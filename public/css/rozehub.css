@@ -186,3 +186,5 @@
 
 /* NOVAOS catalog filter */
 .platforms button:last-child{border-color:#3159b8;color:#3159b8;font-weight:700}.platforms button:last-child.selected{background:linear-gradient(135deg,#13265a,#174e8f);border-color:#13265a;color:#fff}.novaos-filter-label{margin-top:8px;padding:14px 16px;background:linear-gradient(90deg,#071329,#12375f 55%,#073c38);border:1px solid #244f78;color:#eef7ff}.novaos-filter-label .novaos-dot{background:#58d7ff}.novaos-filter-label strong{color:#fff}.novaos-filter-label>span:last-child{color:#8fb8d8;font-size:10px;text-transform:uppercase;letter-spacing:.8px;font-weight:800}
+
+.novaos-build-info{grid-template-columns:repeat(3,1fr)!important}.novaos-sha{display:block!important;max-width:100%;word-break:break-all;color:#60758b!important;margin-top:5px}.novaos-download>div{min-width:0}.novaos-download .novaos-sha{font-family:monospace;font-size:8px}@media(max-width:780px){.novaos-build-info{grid-template-columns:1fr 1fr!important}}@media(max-width:520px){.novaos-build-info{grid-template-columns:1fr!important}}

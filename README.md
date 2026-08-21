@@ -84,3 +84,17 @@ Laravel needs write access to:
 - `storage/logs`
 
 Release packages are intentionally kept outside the public web directory and streamed through `/download/{release}`.
+
+
+## NOVAOS Release Center
+
+NOVAOS is managed separately from application releases.
+
+- Admin overview: `/admin/novaos`
+- NOVAOS releases: `/admin/novaos/releases`
+- New NOVAOS build: `/admin/novaos/releases/create`
+- Application releases remain under `/admin/releases`
+
+NOVAOS releases support: major version, version, codename, build number, Stable/Beta/Nightly channels, x64/ARM64, ISO/system-image upload, automatic SHA-256 calculation, release notes, publishing/unpublishing, and download counts.
+
+After extracting the project in development, run `php artisan migrate` to add the NOVAOS release metadata columns.

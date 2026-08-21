@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Release extends Model
 {
-    protected $fillable = ['software_project_id', 'version', 'platform', 'architecture', 'channel', 'file_path', 'file_name', 'file_size', 'notes', 'is_published', 'published_at', 'downloads_count'];
+    protected $fillable = ['software_project_id', 'version', 'major_version', 'codename', 'build_number', 'platform', 'architecture', 'channel', 'file_path', 'file_name', 'file_size', 'sha256', 'notes', 'is_published', 'published_at', 'downloads_count'];
 
     protected function casts(): array
     {

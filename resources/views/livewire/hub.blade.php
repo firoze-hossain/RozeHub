@@ -22,7 +22,7 @@
                             ['slug' => 'lumina', 'name' => 'Lumina', 'image' => 'lumina.png', 'class' => 'lumina'],
                             ['slug' => 'dbnavigator', 'name' => 'DBNavigator', 'image' => 'dbnavigator.png', 'class' => 'dbnavigator'],
                             ['slug' => 'thundercall', 'name' => 'ThunderCall', 'image' => 'thundercall.png', 'class' => 'thundercall'],
-                            ['slug' => 'roze-os', 'name' => 'NOVAOS', 'image' => 'novaos.png', 'class' => 'novaos'],
+                            ['slug' => 'novaos', 'name' => 'NOVAOS', 'image' => 'novaos.png', 'class' => 'novaos'],
                             ['slug' => 'trackline', 'name' => 'TrackEye', 'image' => 'trackeye.png', 'class' => 'trackeye'],
                             ['slug' => 'roze-language', 'name' => 'Roze', 'image' => 'roze.png', 'class' => 'roze'],
                             ['slug' => 'stratosdb', 'name' => 'StratosDB', 'image' => 'stratosdb.png', 'class' => 'stratosdb'],
@@ -173,15 +173,18 @@
                                     </summary>
                                     <div class="novaos-build-body">
                                         <div class="novaos-build-info">
-                                            <div><span>Build type</span><strong>NOVAOS system image</strong></div>
+                                            <div><span>Major version</span><strong>{{ $release->major_version ?: $release->version }}</strong></div>
+                                            <div><span>Build</span><strong>{{ $release->build_number ?: '—' }}</strong></div>
                                             <div><span>Architecture</span><strong>{{ $release->architecture }}</strong></div>
+                                            <div><span>Channel</span><strong>{{ $release->channel }}</strong></div>
                                             <div><span>Published</span><strong>{{ $release->published_at?->format('F j, Y') }}</strong></div>
+                                            <div><span>Codename</span><strong>{{ $release->codename ?: '—' }}</strong></div>
                                         </div>
                                         @if($release->notes)
                                             <p class="novaos-notes">{{ $release->notes }}</p>
                                         @endif
                                         <div class="novaos-download">
-                                            <div><strong>{{ $release->file_name ?: 'NOVAOS build '.$release->version }}</strong><small>{{ $release->file_size ? number_format($release->file_size / 1048576, 1).' MB' : 'Official release package' }} · {{ number_format($release->downloads_count) }} downloads</small></div>
+                                            <div><strong>{{ $release->file_name ?: 'NOVAOS build '.$release->version }}</strong><small>{{ $release->file_size ? number_format($release->file_size / 1048576, 1).' MB' : 'Official release package' }} · {{ number_format($release->downloads_count) }} downloads</small>@if($release->sha256)<small class="novaos-sha">SHA-256: {{ $release->sha256 }}</small>@endif</div>
                                             <a class="download-button" href="{{ route('releases.download', $release) }}" title="Download NOVAOS {{ $release->version }}">↓ Download</a>
                                         </div>
                                     </div>
