@@ -28,6 +28,11 @@ class Hub extends Component
     }
 
 
+    public function isNovaosProject(?SoftwareProject $project): bool
+    {
+        return $project !== null && (in_array($project->slug, ['novaos', 'roze-os'], true) || strcasecmp($project->name, 'NOVAOS') === 0 || strcasecmp($project->name, 'Roze OS') === 0);
+    }
+
     public function projectImageFor(string $slug): ?string
     {
         return [
@@ -64,22 +69,50 @@ class Hub extends Component
 
     public function render()
     {
+        $baseSearch = function (Builder $query): void {
+            $query->when($this->search, fn (Builder $nestedQuery) => $nestedQuery->where(function (Builder $nested) {
+                $nested->where('name', 'like', "%{$this->search}%")
+                    ->orWhere('tagline', 'like', "%{$this->search}%")
+                    ->orWhere('category', 'like', "%{$this->search}%");
+            }));
+        };
+
+        // Applications/tools use the normal platform filters. NOVAOS is intentionally
+        // excluded here because it is an independent operating system, not an app.
         $projects = SoftwareProject::query()
+            ->where(function (Builder $query) {
+                $query->whereNotIn('slug', ['novaos', 'roze-os'])
+                    ->whereNotIn('name', ['NOVAOS', 'Roze OS']);
+            })
+            ->when($this->platform === 'NOVAOS', fn (Builder $query) => $query->whereRaw('1 = 0'))
             ->with(['releases' => fn ($query) => $query->where('is_published', true)->latest('published_at')])
-            ->when($this->search, fn (Builder $query) => $query->where(fn (Builder $nested) => $nested
-                ->where('name', 'like', "%{$this->search}%")
-                ->orWhere('tagline', 'like', "%{$this->search}%")
-                ->orWhere('category', 'like', "%{$this->search}%")))
+            ->when($this->search, $baseSearch)
             ->when($this->platform !== 'All platforms', fn (Builder $query) => $query->whereHas('releases', fn (Builder $release) => $release
                 ->where('platform', $this->platform)->where('is_published', true)))
             ->orderBy('name')
             ->get();
 
+        // NOVAOS always has its own catalog entry and is never filtered into
+        // Windows/macOS/Linux application results.
+        $novaos = SoftwareProject::query()
+            ->where(function (Builder $query) {
+                $query->whereIn('slug', ['novaos', 'roze-os'])
+                    ->orWhereIn('name', ['NOVAOS', 'Roze OS']);
+            })
+            ->with(['releases' => fn ($query) => $query->where('is_published', true)->latest('published_at')])
+            ->when($this->search, $baseSearch)
+            ->first();
+
         $selected = SoftwareProject::with(['releases' => fn ($query) => $query->where('is_published', true)->latest('published_at'), 'reviews' => fn ($query) => $query->where('is_approved', true)->latest()->take(4)])
-            ->find($this->selectedProjectId) ?? $projects->first();
+            ->find($this->selectedProjectId);
+
+        if (!$selected) {
+            $selected = $projects->first() ?? $novaos;
+        }
 
         return view('livewire.hub', [
             'projects' => $projects,
+            'novaos' => $novaos,
             'selected' => $selected,
             'totalDownloads' => SoftwareProject::query()->withSum('releases', 'downloads_count')->get()->sum('releases_sum_downloads_count'),
             'releaseCount' => SoftwareProject::query()->withCount('releases')->get()->sum('releases_count'),
