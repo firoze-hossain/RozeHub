@@ -44,6 +44,8 @@ class DatabaseSeeder extends Seeder
             ], ['channel' => 'Stable', 'is_published' => true, 'published_at' => now()->subDays(rand(2, 30)), 'downloads_count' => $item['downloads'], 'notes' => $item['notes']]);
         }
 
+        $this->call(DocumentationSeeder::class);
+
         $navigator = SoftwareProject::where('slug', 'dbnavigator')->first();
         Review::updateOrCreate(['software_project_id' => $navigator->id, 'author_name' => 'Mina R.'], ['rating' => 5, 'body' => 'The schema view is exactly the kind of calm visual feedback I want while exploring an unfamiliar database.', 'is_approved' => true]);
         Review::updateOrCreate(['software_project_id' => $navigator->id, 'author_name' => 'Dev K.'], ['rating' => 4, 'body' => 'Fast to open and pleasantly direct. I would like to see more import options in a future release.', 'is_approved' => true]);

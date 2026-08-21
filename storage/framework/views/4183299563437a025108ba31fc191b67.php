@@ -1,7 +1,7 @@
 <main class="shell">
         <header class="topbar">
             <a class="brand" href="<?php echo e(route('hub')); ?>"><span class="brand-logo"><img src="<?php echo e(asset('images/rozehub-ecosystem.png')); ?>" alt="RozeHub"></span><span>RozeHub</span></a>
-            <nav><a class="active" href="#catalog">Explore</a><a href="#releases">Releases</a><a href="#community">Community</a></nav>
+            <nav><a class="active" href="#catalog">Explore</a><a href="#releases">Releases</a><a href="<?php echo e(route('docs.index')); ?>">Documentation</a><a href="#community">Community</a></nav>
             <a class="studio-link" href="<?php echo e(route('admin.login')); ?>">Admin login <span>↗</span></a>
         </header>
 

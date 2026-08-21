@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Release extends Model
 {
@@ -17,5 +18,10 @@ class Release extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(SoftwareProject::class, 'software_project_id');
+    }
+
+    public function documentationPages(): HasMany
+    {
+        return $this->hasMany(DocumentationPage::class, 'release_id');
     }
 }

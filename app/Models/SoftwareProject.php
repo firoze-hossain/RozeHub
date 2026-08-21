@@ -17,6 +17,16 @@ class SoftwareProject extends Model
         return $this->hasMany(Release::class);
     }
 
+    public function documentationSections(): HasMany
+    {
+        return $this->hasMany(DocumentationSection::class, 'software_project_id');
+    }
+
+    public function documentationPages(): HasMany
+    {
+        return $this->hasMany(DocumentationPage::class, 'software_project_id');
+    }
+
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);

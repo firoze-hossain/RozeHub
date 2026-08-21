@@ -98,3 +98,12 @@ NOVAOS is managed separately from application releases.
 NOVAOS releases support: major version, version, codename, build number, Stable/Beta/Nightly channels, x64/ARM64, ISO/system-image upload, automatic SHA-256 calculation, release notes, publishing/unpublishing, and download counts.
 
 After extracting the project in development, run `php artisan migrate` to add the NOVAOS release metadata columns.
+
+
+## Version-aware documentation
+
+Documentation pages can now be assigned to a specific software release. Use **General · all releases** for concepts that remain stable, or select a release for installation instructions, APIs, commands, compatibility notes, architecture changes, and release notes.
+
+Public documentation defaults to the latest published release and lets visitors switch versions. PDF/print and Markdown exports follow the selected release.
+
+Development setup remains PHP/Laravel/Blade/Livewire/CSS only; no Node.js, npm, Vite, or frontend build step is required.

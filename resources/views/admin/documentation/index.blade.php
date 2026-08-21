@@ -1,0 +1,6 @@
+@extends('admin.layout')
+@section('content')
+<div class="admin-page-head"><div><span>DOCUMENTATION CONTROL</span><h2>Documentation library</h2><p>Maintain online guides, references, tutorials, architecture notes, and release documentation for every RozeHub project.</p></div></div>
+<div class="admin-doc-callout"><div><strong>One documentation system for the whole ecosystem.</strong><p>NOVAOS, Roze, and StratosDB start with deep technical guides. The other products use the same editor and can be expanded without code changes.</p></div><a class="admin-primary" href="{{ route('docs.index') }}">View public docs ↗</a></div>
+<div class="admin-card admin-doc-project-grid">@foreach($projects as $project)<a class="admin-doc-project" href="{{ route('admin.documentation.project',$project) }}"><div class="admin-doc-project-top"><span class="project-icon accent-{{ $project->accent }}">{{ $project->icon }}</span><span>{{ $project->category }}</span></div><h3>{{ $project->name }}</h3><p>{{ $project->tagline }}</p><div><strong>{{ $project->published_documentation_pages_count }}</strong> published pages <span>·</span> {{ $project->documentation_sections_count }} sections</div><footer>Manage documentation <span>→</span></footer></a>@endforeach</div>
+@endsection

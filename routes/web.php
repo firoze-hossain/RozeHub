@@ -37,3 +37,26 @@ Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(func
  Route::post('/reviews/{review}/toggle',[AdminReviewController::class,'toggle'])->name('reviews.toggle');
  Route::delete('/reviews/{review}',[AdminReviewController::class,'destroy'])->name('reviews.destroy');
 });
+
+
+// Public documentation
+Route::get('/docs', [\App\Http\Controllers\DocumentationController::class, 'index'])->name('docs.index');
+Route::get('/docs/search', [\App\Http\Controllers\DocumentationController::class, 'search'])->name('docs.search');
+Route::get('/docs/{project:slug}/print', [\App\Http\Controllers\DocumentationController::class, 'print'])->name('docs.print');
+Route::get('/docs/{project:slug}/download.md', [\App\Http\Controllers\DocumentationController::class, 'markdown'])->name('docs.markdown');
+Route::get('/docs/{project:slug}/{pageSlug}', [\App\Http\Controllers\DocumentationController::class, 'page'])->name('docs.page');
+Route::get('/docs/{project:slug}', [\App\Http\Controllers\DocumentationController::class, 'project'])->name('docs.project');
+
+Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(function(){
+    Route::get('/documentation', [\App\Http\Controllers\AdminDocumentationController::class, 'index'])->name('documentation.index');
+    Route::get('/documentation/{project:slug}', [\App\Http\Controllers\AdminDocumentationController::class, 'project'])->name('documentation.project');
+    Route::post('/documentation/{project:slug}/sections', [\App\Http\Controllers\AdminDocumentationController::class, 'storeSection'])->name('documentation.sections.store');
+    Route::put('/documentation/sections/{section}', [\App\Http\Controllers\AdminDocumentationController::class, 'updateSection'])->name('documentation.sections.update');
+    Route::delete('/documentation/sections/{section}', [\App\Http\Controllers\AdminDocumentationController::class, 'destroySection'])->name('documentation.sections.destroy');
+    Route::get('/documentation/{project:slug}/pages/create', [\App\Http\Controllers\AdminDocumentationController::class, 'createPage'])->name('documentation.pages.create');
+    Route::post('/documentation/{project:slug}/pages', [\App\Http\Controllers\AdminDocumentationController::class, 'storePage'])->name('documentation.pages.store');
+    Route::get('/documentation/pages/{page}/edit', [\App\Http\Controllers\AdminDocumentationController::class, 'editPage'])->name('documentation.pages.edit');
+    Route::put('/documentation/pages/{page}', [\App\Http\Controllers\AdminDocumentationController::class, 'updatePage'])->name('documentation.pages.update');
+    Route::post('/documentation/pages/{page}/toggle', [\App\Http\Controllers\AdminDocumentationController::class, 'togglePage'])->name('documentation.pages.toggle');
+    Route::delete('/documentation/pages/{page}', [\App\Http\Controllers\AdminDocumentationController::class, 'destroyPage'])->name('documentation.pages.destroy');
+});
