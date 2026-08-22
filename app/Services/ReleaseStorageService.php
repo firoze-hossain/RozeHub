@@ -88,6 +88,97 @@ class ReleaseStorageService
         ];
     }
 
+    public function storeMarketplaceUploadedFile(UploadedFile $file, MarketplaceItem $item, array $metadata): array
+    {
+        $this->assertSize($file->getSize());
+
+        $originalName = $this->safeFileName($file->getClientOriginalName());
+        $relativePath = $this->marketplaceRelativePath($item, $metadata, $originalName);
+        $this->disk()->makeDirectory(dirname($relativePath));
+
+        $stored = $file->storeAs(dirname($relativePath), basename($relativePath), 'releases');
+        if (!$stored) {
+            throw new RuntimeException('The marketplace package could not be stored.');
+        }
+
+        return $this->metadata($stored, $originalName);
+    }
+
+    public function consumeUploadTokenToMarketplace(string $token, MarketplaceItem $item, array $metadata): array
+    {
+        $token = $this->safeToken($token);
+        $manifestPath = $this->manifestPath($token);
+        $partPath = $this->partPath($token);
+
+        if (!File::exists($manifestPath) || !File::exists($partPath)) {
+            throw new RuntimeException('The uploaded package session has expired or no longer exists.');
+        }
+
+        $manifest = json_decode((string) File::get($manifestPath), true);
+        if (!is_array($manifest) || ($manifest['complete'] ?? false) !== true) {
+            throw new RuntimeException('The uploaded marketplace package is incomplete.');
+        }
+
+        $actualSize = File::size($partPath);
+        $expectedSize = (int) ($manifest['total_size'] ?? 0);
+        $expectedChunks = (int) ($manifest['total_chunks'] ?? 0);
+        $nextChunk = (int) ($manifest['next_chunk'] ?? 0);
+
+        if ($expectedSize < 1 || $expectedChunks < 1 || $nextChunk !== $expectedChunks || $actualSize !== $expectedSize) {
+            throw new RuntimeException('The uploaded marketplace package is incomplete.');
+        }
+
+        $this->assertSize($actualSize);
+
+        $originalName = $this->safeFileName((string) ($manifest['file_name'] ?? 'package.bin'));
+        $relativePath = $this->marketplaceRelativePath($item, $metadata, $originalName);
+        $this->disk()->makeDirectory(dirname($relativePath));
+        $targetPath = $this->disk()->path($relativePath);
+
+        if (File::exists($targetPath)) {
+            File::delete($targetPath);
+        }
+
+        if (!@rename($partPath, $targetPath)) {
+            if (!@copy($partPath, $targetPath)) {
+                throw new RuntimeException('The marketplace package could not be moved into release storage.');
+            }
+            File::delete($partPath);
+        }
+
+        $sha256 = hash_file('sha256', $targetPath);
+        File::delete($manifestPath);
+
+        return [
+            'file_path' => $relativePath,
+            'file_name' => $originalName,
+            'file_size' => $actualSize,
+            'sha256' => $sha256,
+        ];
+    }
+
+    private function marketplaceRelativePath(MarketplaceItem $item, array $metadata, string $fileName): string
+    {
+        $projectSlug = Str::slug($item->project?->slug ?: 'project') ?: 'project';
+        $itemSlug = Str::slug($item->slug ?: $item->item_id) ?: 'item';
+        $version = Str::slug((string) ($metadata['version'] ?? 'unknown')) ?: 'unknown';
+        $platform = Str::slug((string) ($metadata['platform'] ?? 'All')) ?: 'all';
+        $architecture = Str::slug((string) ($metadata['architecture'] ?? 'All')) ?: 'all';
+        $channel = Str::slug((string) ($metadata['channel'] ?? 'Stable')) ?: 'stable';
+
+        return implode('/', [
+            'marketplace',
+            $projectSlug,
+            $item->item_type,
+            $itemSlug,
+            $version,
+            $platform,
+            $architecture,
+            $channel,
+            $fileName,
+        ]);
+    }
+
     public function delete(?string $relativePath): void
     {
         if ($relativePath && $this->disk()->exists($relativePath)) {

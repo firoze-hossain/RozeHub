@@ -69,3 +69,33 @@ Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(func
     Route::post('/documentation/pages/{page}/toggle', [\App\Http\Controllers\AdminDocumentationController::class, 'togglePage'])->name('documentation.pages.toggle');
     Route::delete('/documentation/pages/{page}', [\App\Http\Controllers\AdminDocumentationController::class, 'destroyPage'])->name('documentation.pages.destroy');
 });
+
+
+// Public RozeHub Marketplace: plugins and extensions for desktop applications.
+Route::get('/marketplace', [\App\Http\Controllers\MarketplaceController::class, 'index'])->name('marketplace.index');
+Route::get('/marketplace/{item:slug}', [\App\Http\Controllers\MarketplaceController::class, 'item'])->name('marketplace.item');
+
+// Public marketplace API used by Lumina and DBNavigator.
+Route::get('/api/v1/marketplace/{project}', [\App\Http\Controllers\Api\MarketplaceController::class, 'index'])
+    ->middleware('throttle:60,1')->name('api.marketplace.index');
+Route::get('/api/v1/marketplace/{project}/{item:slug}', [\App\Http\Controllers\Api\MarketplaceController::class, 'item'])
+    ->middleware('throttle:60,1')->name('api.marketplace.item');
+Route::get('/api/v1/marketplace/releases/{release}/download', [\App\Http\Controllers\Api\MarketplaceController::class, 'download'])
+    ->middleware('throttle:30,1')->name('api.marketplace.download');
+
+Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/marketplace', [\App\Http\Controllers\AdminMarketplaceController::class, 'index'])->name('marketplace.index');
+    Route::get('/marketplace/create', [\App\Http\Controllers\AdminMarketplaceController::class, 'create'])->name('marketplace.create');
+    Route::post('/marketplace', [\App\Http\Controllers\AdminMarketplaceController::class, 'store'])->name('marketplace.store');
+    Route::get('/marketplace/{item}/edit', [\App\Http\Controllers\AdminMarketplaceController::class, 'edit'])->name('marketplace.edit');
+    Route::put('/marketplace/{item}', [\App\Http\Controllers\AdminMarketplaceController::class, 'update'])->name('marketplace.update');
+    Route::delete('/marketplace/{item}', [\App\Http\Controllers\AdminMarketplaceController::class, 'destroy'])->name('marketplace.destroy');
+
+    Route::get('/marketplace/{item}/releases', [\App\Http\Controllers\AdminMarketplaceController::class, 'releases'])->name('marketplace.releases.index');
+    Route::get('/marketplace/{item}/releases/create', [\App\Http\Controllers\AdminMarketplaceController::class, 'createRelease'])->name('marketplace.releases.create');
+    Route::post('/marketplace/{item}/releases', [\App\Http\Controllers\AdminMarketplaceController::class, 'storeRelease'])->name('marketplace.releases.store');
+    Route::get('/marketplace/releases/{release}/edit', [\App\Http\Controllers\AdminMarketplaceController::class, 'editRelease'])->name('marketplace.releases.edit');
+    Route::put('/marketplace/releases/{release}', [\App\Http\Controllers\AdminMarketplaceController::class, 'updateRelease'])->name('marketplace.releases.update');
+    Route::post('/marketplace/releases/{release}/toggle', [\App\Http\Controllers\AdminMarketplaceController::class, 'toggleRelease'])->name('marketplace.releases.toggle');
+    Route::delete('/marketplace/releases/{release}', [\App\Http\Controllers\AdminMarketplaceController::class, 'destroyRelease'])->name('marketplace.releases.destroy');
+});

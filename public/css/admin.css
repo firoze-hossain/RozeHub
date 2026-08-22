@@ -299,3 +299,33 @@
 /* Release distribution and update controls */
 .release-form{max-width:980px;padding:0;overflow:hidden}.release-form-section{padding:22px 25px;border-bottom:1px solid var(--admin-line)}.release-form-section:last-of-type{border-bottom:0}.release-form-section-head{display:flex;align-items:end;justify-content:space-between;gap:15px;margin-bottom:16px}.release-form-section-head span{font-size:8px;letter-spacing:1.4px;color:#718079;font-weight:900}.release-form-section-head strong{font-size:11px;color:#49625a;font-weight:600}.release-form .field-help{display:block;color:#7d8b84;font-size:8px;line-height:1.45;margin-top:5px;font-weight:400}.release-policy-check{height:100%;padding:30px 14px 10px;background:#f5f8f5;border:1px solid #dbe5de;display:flex!important;align-items:flex-start;gap:10px}.release-policy-check input{width:auto!important;margin:2px 0 0!important}.release-policy-check strong,.release-policy-check small{display:block}.release-policy-check strong{font-size:10px}.release-policy-check small{font-size:8px;color:#77847e;font-weight:400;margin-top:3px;line-height:1.5}.release-current-file{line-height:1.6}.release-current-file code{font-size:9px;color:#285b49;overflow-wrap:anywhere}.release-upload-status{margin:12px 0 4px;padding:12px 13px;background:#edf7f0;border:1px solid #cce1d3}.release-upload-status>div:first-child{display:flex;justify-content:space-between;gap:10px;align-items:center}.release-upload-status strong{font-size:10px}.release-upload-status span{font-size:8px;color:#70827a}.release-upload-track{height:5px;background:#d8e7dd;margin-top:9px;overflow:hidden}.release-upload-track i{display:block;width:0;height:100%;background:#1d7758;transition:width .15s}.release-upload-status.is-error{background:#fff0ed;border-color:#efc7be;color:#9f382d}.release-upload-status.is-error .release-upload-track i{background:#b64b3c}.release-architecture-note{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:14px 16px;background:#10221e;color:#e9fff4;margin-bottom:14px}.release-architecture-note strong,.release-architecture-note span{display:block}.release-architecture-note strong{font-size:10px}.release-architecture-note span{font-size:9px;color:#a9c6ba;margin-top:4px}.release-architecture-note code{font:10px ui-monospace,SFMono-Regular,Menlo,monospace;color:#80e1b8}.release-policy{display:inline-block;padding:4px 7px;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.5px}.release-policy.mandatory{background:#fde7e2;color:#a53e31}.release-policy.optional{background:#e7f3eb;color:#277052}.table-card td small{max-width:240px;overflow-wrap:anywhere}.filter-form select{width:190px}.admin-form-card .release-form-section textarea{min-height:150px}
 @media(max-width:800px){.release-form-section-head,.release-architecture-note{align-items:flex-start;flex-direction:column}.release-form-section .form-grid.two,.release-form-section .form-grid.three{grid-template-columns:1fr}.release-policy-check{padding:14px}.filter-form{flex-wrap:wrap}.filter-form select{width:100%}}
+
+/* RozeHub Marketplace administration */
+.admin-page-head{display:flex;justify-content:space-between;gap:24px;align-items:flex-end;margin-bottom:24px}
+.admin-page-head h2{margin:4px 0;font-size:28px}
+.admin-button{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid #ddd5ea;background:#fff;color:#332b40;padding:10px 14px;border-radius:10px;text-decoration:none;cursor:pointer;font-weight:650}
+.admin-button.primary{background:#5b3fc1;color:#fff;border-color:#5b3fc1}
+.admin-button.small{padding:7px 10px;font-size:12px}
+.admin-button.danger{color:#a22;background:#fff}
+.market-filter{background:#fff;border:1px solid #e7e1ef;border-radius:16px;padding:14px;margin-bottom:20px}
+.market-filter form{display:flex;gap:10px}.market-filter input,.market-filter select{flex:1;padding:11px 12px;border:1px solid #ddd5e7;border-radius:9px}
+.market-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.market-card{background:#fff;border:1px solid #e6e1ec;border-radius:18px;padding:20px}
+.market-card-top,.market-card-footer{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.market-icon{width:52px;height:52px;border-radius:14px;background:#f0ebff;display:grid;place-items:center;font-weight:800;overflow:hidden}
+.market-icon img{width:100%;height:100%;object-fit:cover}
+.market-card h3{margin:16px 0 3px;font-size:20px}.market-card p{color:#6d6875;line-height:1.5}.market-meta{font-size:12px;color:#81798b}
+.market-badges{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
+.market-badge{display:inline-block;padding:5px 8px;border-radius:999px;background:#f0edf4;font-size:10px;font-weight:750}
+.market-badge.plugin{background:#e9f8ef;color:#176d3c}.market-badge.extension{background:#edf5ff;color:#2465a2}
+.market-badge.official{background:#eee9ff;color:#5b3fc1}.market-badge.verified{background:#e7f8ef;color:#167241}
+.market-badge.muted-badge{color:#777}.market-badge.danger-badge{background:#fff0f0;color:#a33}
+.market-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.market-permission-box{border:1px solid #e7e1ef;background:#faf9fc;border-radius:14px;padding:16px;margin:16px 0}
+.market-permission-box h3{margin-top:0}.form-grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.admin-form label{display:block;font-weight:650;margin:12px 0}.admin-form input,.admin-form select,.admin-form textarea{display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px 12px;border:1px solid #ddd5e7;border-radius:9px;background:#fff;font:inherit}
+.check-row{display:flex;gap:20px;flex-wrap:wrap;padding:14px 0}.check-row label{margin:0}.check-row input{display:inline-block;width:auto;margin-right:6px}
+.form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.chunk-upload-status{margin:14px 0;padding:12px;border:1px solid #ddd5e7;border-radius:10px;background:#faf9fc}
+.chunk-progress{height:7px;background:#e8e4ed;border-radius:999px;overflow:hidden;margin-top:8px}.chunk-progress span{display:block;height:100%;background:#5b3fc1;transition:width .2s}
+@media(max-width:720px){.admin-page-head{display:block}.market-filter form,.form-grid-2{display:grid;grid-template-columns:1fr}.market-card-footer{display:block}.market-actions{margin-top:10px}}

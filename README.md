@@ -116,3 +116,34 @@ The documentation editor now preserves the selected text while repeatedly changi
 RozeHub includes a version-aware update API for all software projects. Desktop clients can check their installed version, platform, architecture and release channel, then receive a signed/hashed package URL and update policy. Large installers are stored outside the Laravel project; MySQL stores only release metadata and the relative package path.
 
 See `docs/desktop-update-api.md` for the API contract.
+
+
+## Marketplace: plugins and extensions
+
+RozeHub now provides a first-class marketplace for both **plugins** and
+**extensions**. The same system supports Lumina and DBNavigator without
+hard-coding either application to one package type.
+
+Admin:
+
+- `/admin/marketplace`
+- create/edit/publish marketplace items
+- create versioned releases
+- define application compatibility
+- define package type, platform, architecture and channel
+- define permissions and dependencies
+- safely delete external packages
+
+Public:
+
+- `/marketplace`
+- `/marketplace/{slug}`
+
+Desktop API:
+
+- `/api/v1/marketplace/{project}`
+- `/api/v1/marketplace/{project}/{slug}`
+- `/api/v1/marketplace/releases/{release}/download`
+
+Actual packages are stored outside the Laravel project and outside MySQL.
+Only metadata and a relative storage path are stored in the database.
