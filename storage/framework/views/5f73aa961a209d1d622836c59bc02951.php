@@ -1,20 +1,19 @@
-@extends('admin.layout')
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="admin-page-head admin-doc-form-head">
     <div class="admin-doc-title-wrap">
-        <div class="admin-doc-project-mark">{{ $project->icon }}</div>
+        <div class="admin-doc-project-mark"><?php echo e($project->icon); ?></div>
         <div>
-            <span>{{ strtoupper($project->name) }} · DOCUMENTATION</span>
-            <h2>{{ $mode === 'create' ? 'Create documentation page' : 'Edit documentation page' }}</h2>
+            <span><?php echo e(strtoupper($project->name)); ?> · DOCUMENTATION</span>
+            <h2><?php echo e($mode === 'create' ? 'Create documentation page' : 'Edit documentation page'); ?></h2>
             <p>Write rich documentation with familiar editor controls, then publish it as clean RozeHub Markdown.</p>
         </div>
     </div>
-    <a class="admin-secondary" href="{{ route('admin.documentation.project',$project) }}">← Documentation workspace</a>
+    <a class="admin-secondary" href="<?php echo e(route('admin.documentation.project',$project)); ?>">← Documentation workspace</a>
 </div>
 
-<form id="documentation-page-form" class="admin-doc-editor-layout" method="POST" action="{{ $mode === 'create' ? route('admin.documentation.pages.store',$project) : route('admin.documentation.pages.update',$page) }}">
-    @csrf
-    @if($mode==='edit') @method('PUT') @endif
+<form id="documentation-page-form" class="admin-doc-editor-layout" method="POST" action="<?php echo e($mode === 'create' ? route('admin.documentation.pages.store',$project) : route('admin.documentation.pages.update',$page)); ?>">
+    <?php echo csrf_field(); ?>
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($mode==='edit'): ?> <?php echo method_field('PUT'); ?> <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
     <main class="admin-form-card admin-doc-editor">
         <div class="admin-editor-section-head">
@@ -24,10 +23,10 @@
         </div>
 
         <div class="form-grid two">
-            <label>Title<input name="title" value="{{ old('title',$page->title) }}" placeholder="e.g. Installation guide" required></label>
-            <label>Slug<input name="slug" value="{{ old('slug',$page->slug) }}" placeholder="auto-generated if blank"><small>Used in the public documentation URL.</small></label>
+            <label>Title<input name="title" value="<?php echo e(old('title',$page->title)); ?>" placeholder="e.g. Installation guide" required></label>
+            <label>Slug<input name="slug" value="<?php echo e(old('slug',$page->slug)); ?>" placeholder="auto-generated if blank"><small>Used in the public documentation URL.</small></label>
         </div>
-        <label>Summary<input name="summary" value="{{ old('summary',$page->summary) }}" maxlength="500" placeholder="One or two sentences describing this page."></label>
+        <label>Summary<input name="summary" value="<?php echo e(old('summary',$page->summary)); ?>" maxlength="500" placeholder="One or two sentences describing this page."></label>
 
         <div class="doc-rich-editor" data-editor>
             <div class="doc-editor-label-row">
@@ -67,9 +66,9 @@
                     <div class="doc-size-controls">
                         <button type="button" class="doc-size-step" data-size-step="-1" title="Decrease text size (Ctrl + -)">−</button>
                         <select id="doc-font-size" class="doc-font-size-select" aria-label="Font size">
-                            @foreach([9,10,11,12,13,14,15,16,18,20,22,24,26,28,32,36,40,48,56,64] as $size)
-                                <option value="{{ $size }}" {{ $size === 16 ? 'selected' : '' }}>{{ $size }} px</option>
-                            @endforeach
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = [9,10,11,12,13,14,15,16,18,20,22,24,26,28,32,36,40,48,56,64]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $size): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                <option value="<?php echo e($size); ?>" <?php echo e($size === 16 ? 'selected' : ''); ?>><?php echo e($size); ?> px</option>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                         </select>
                         <button type="button" class="doc-size-step" data-size-step="1" title="Increase text size (Ctrl + +)">+</button>
                     </div>
@@ -109,7 +108,7 @@
             </div>
 
             <div id="doc-rich-content" class="doc-rich-content" contenteditable="true" role="textbox" aria-multiline="true" spellcheck="true" data-placeholder="Start writing your documentation here…"></div>
-            <textarea id="doc-content-source" name="content" class="doc-content-source" required>{{ old('content',$page->content) }}</textarea>
+            <textarea id="doc-content-source" name="content" class="doc-content-source" required><?php echo e(old('content',$page->content)); ?></textarea>
 
             <div class="doc-editor-footer">
                 <div class="doc-editor-tip"><span>⌘</span><strong>Tip:</strong> Use headings to structure long documentation pages. Code blocks and lists are preserved on the public site.</div>
@@ -124,28 +123,29 @@
             <label>Documentation release
                 <select name="release_id" id="release_id">
                     <option value="" data-version="All versions">General · all releases</option>
-                    @foreach($releases as $release)
-                        <option value="{{ $release->id }}" data-version="{{ $release->version }}" {{ old('release_id',$page->release_id)==$release->id ? 'selected':'' }}>
-                            v{{ $release->version }} · {{ ucfirst($release->channel ?: 'release') }}{{ $release->is_published ? '' : ' · unpublished' }}
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $releases; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $release): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                        <option value="<?php echo e($release->id); ?>" data-version="<?php echo e($release->version); ?>" <?php echo e(old('release_id',$page->release_id)==$release->id ? 'selected':''); ?>>
+                            v<?php echo e($release->version); ?> · <?php echo e(ucfirst($release->channel ?: 'release')); ?><?php echo e($release->is_published ? '' : ' · unpublished'); ?>
+
                         </option>
-                    @endforeach
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                 </select>
                 <small class="field-help">Choose a release for version-specific instructions. General pages remain visible across releases.</small>
             </label>
             <div class="admin-doc-version-preview">
                 <span>PUBLIC VERSION</span>
-                <strong id="resolved-version">{{ $page->release ? 'v'.$page->release->version : 'All versions' }}</strong>
-                <small id="resolved-version-note">{{ $page->release ? 'This page is scoped to one release.' : 'This page is shared across releases.' }}</small>
+                <strong id="resolved-version"><?php echo e($page->release ? 'v'.$page->release->version : 'All versions'); ?></strong>
+                <small id="resolved-version-note"><?php echo e($page->release ? 'This page is scoped to one release.' : 'This page is shared across releases.'); ?></small>
             </div>
-            <label>Section<select name="documentation_section_id"><option value="">Unassigned</option>@foreach($sections as $section)<option value="{{ $section->id }}" {{ old('documentation_section_id',$page->documentation_section_id)==$section->id?'selected':'' }}>{{ $section->title }}</option>@endforeach</select></label>
-            <label>Page type<select name="kind">@foreach(['overview','guide','installation','reference','architecture','api','tutorial','operations','development','troubleshooting','release','release-notes'] as $kind)<option value="{{ $kind }}" {{ old('kind',$page->kind)===$kind?'selected':'' }}>{{ strtoupper(str_replace('-',' ',$kind)) }}</option>@endforeach</select></label>
-            <input type="hidden" name="version" id="version" value="{{ old('version',$page->version) }}">
+            <label>Section<select name="documentation_section_id"><option value="">Unassigned</option><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $sections; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $section): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?><option value="<?php echo e($section->id); ?>" <?php echo e(old('documentation_section_id',$page->documentation_section_id)==$section->id?'selected':''); ?>><?php echo e($section->title); ?></option><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?></select></label>
+            <label>Page type<select name="kind"><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = ['overview','guide','installation','reference','architecture','api','tutorial','operations','development','troubleshooting','release','release-notes']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $kind): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?><option value="<?php echo e($kind); ?>" <?php echo e(old('kind',$page->kind)===$kind?'selected':''); ?>><?php echo e(strtoupper(str_replace('-',' ',$kind))); ?></option><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?></select></label>
+            <input type="hidden" name="version" id="version" value="<?php echo e(old('version',$page->version)); ?>">
         </section>
 
         <section class="admin-form-card admin-doc-publish-card">
             <div class="admin-editor-section-head"><span>PUBLISHING</span><h3>Visibility</h3></div>
-            <label class="admin-doc-publish-toggle"><input type="checkbox" name="is_published" value="1" {{ old('is_published',$page->is_published) ? 'checked':'' }}><span><strong>Publish publicly</strong><small>Visible immediately in the public documentation site.</small></span></label>
-            <div class="form-actions"><a class="admin-secondary" href="{{ route('admin.documentation.project',$project) }}">Cancel</a><button class="admin-primary" type="submit">{{ $mode==='create' ? 'Create page' : 'Save page' }}</button></div>
+            <label class="admin-doc-publish-toggle"><input type="checkbox" name="is_published" value="1" <?php echo e(old('is_published',$page->is_published) ? 'checked':''); ?>><span><strong>Publish publicly</strong><small>Visible immediately in the public documentation site.</small></span></label>
+            <div class="form-actions"><a class="admin-secondary" href="<?php echo e(route('admin.documentation.project',$project)); ?>">Cancel</a><button class="admin-primary" type="submit"><?php echo e($mode==='create' ? 'Create page' : 'Save page'); ?></button></div>
         </section>
 
         <section class="admin-doc-version-help">
@@ -668,4 +668,6 @@
     updateToolbarState();
 })();
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('admin.layout', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/firoze/projects/others/RozeHub/resources/views/admin/documentation/page-form.blade.php ENDPATH**/ ?>
