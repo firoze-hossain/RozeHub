@@ -236,4 +236,4 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
         </section>
         <footer class="site-footer"><a class="brand" href="#"><span class="brand-logo"><img src="<?php echo e(asset('images/rozehub-ecosystem.png')); ?>" alt="RozeHub"></span><span>RozeHub</span></a><p>Software made with intent. Built by Firoze.</p><a href="<?php echo e(route('admin.login')); ?>">Admin login →</a></footer>
 </main>
-<?php /**PATH /home/firoze/Downloads/RozeHub-documentation-size-controls-migration-fixed/RozeHub-final/resources/views/livewire/hub.blade.php ENDPATH**/ ?>
+<?php /**PATH /home/firoze/Downloads/RozeHub-release-storage-updated-v2/RozeHub-final/resources/views/livewire/hub.blade.php ENDPATH**/ ?>

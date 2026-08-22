@@ -107,3 +107,21 @@ Documentation pages can now be assigned to a specific software release. Use **Ge
 Public documentation defaults to the latest published release and lets visitors switch versions. PDF/print and Markdown exports follow the selected release.
 
 Development setup remains PHP/Laravel/Blade/Livewire/CSS only; no Node.js, npm, Vite, or frontend build step is required.
+
+## Release file storage
+
+Software release binaries are intentionally stored outside the Laravel project. MySQL stores only the relative `file_path` plus release metadata such as filename, size and SHA-256.
+
+Default local layout:
+
+```text
+<parent-of-project>/rozehub-storage/
+  novaos/
+    2026.2.1/
+      novaos-2026.2.1-x64.iso
+  dbnavigator/
+    1.4.0/
+      dbnavigator-1.4.0-linux-x64.tar.gz
+```
+
+Set `ROZEHUB_RELEASE_STORAGE_PATH` in `.env` to choose another location, especially on cPanel. Deleting or replacing a release also deletes the physical package and removes empty version/project folders. Older packages from the previous `storage/app/private/releases/...` layout remain downloadable and are cleaned up automatically when replaced or deleted.

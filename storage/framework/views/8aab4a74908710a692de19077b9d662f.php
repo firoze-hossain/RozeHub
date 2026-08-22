@@ -11,4 +11,4 @@
 </head>
 <body><?php echo e($slot); ?><?php echo \Livewire\Mechanisms\FrontendAssets\FrontendAssets::scripts(); ?></body>
 </html>
-<?php /**PATH /home/firoze/Downloads/RozeHub-documentation-size-controls-migration-fixed/RozeHub-final/resources/views/components/layouts/app.blade.php ENDPATH**/ ?>
+<?php /**PATH /home/firoze/Downloads/RozeHub-release-storage-updated-v2/RozeHub-final/resources/views/components/layouts/app.blade.php ENDPATH**/ ?>

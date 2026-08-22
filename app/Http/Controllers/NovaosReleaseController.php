@@ -5,8 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Release;
 use App\Models\SoftwareProject;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use App\Services\ReleaseFileStorage;
 use Illuminate\Validation\Rule;
 
 class NovaosReleaseController extends Controller
@@ -39,7 +38,7 @@ class NovaosReleaseController extends Controller
         return view('admin/novaos/releases/form', compact('project', 'release'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, ReleaseFileStorage $releaseFiles)
     {
         $project = $this->project();
         $data = $this->validated($request);
@@ -47,10 +46,8 @@ class NovaosReleaseController extends Controller
 
         $data['software_project_id'] = $project->id;
         $data['platform'] = 'NOVAOS';
-        $data['file_path'] = $file->store('releases/novaos', 'local');
-        $data['file_name'] = $file->getClientOriginalName();
-        $data['file_size'] = $file->getSize();
-        $data['sha256'] = hash_file('sha256', $file->getRealPath());
+        $stored = $releaseFiles->store($file, $project, $data['version']);
+        $data = array_merge($data, $stored);
         $data['is_published'] = $request->boolean('is_published');
         $data['published_at'] = $data['is_published'] ? now() : null;
 
@@ -66,7 +63,7 @@ class NovaosReleaseController extends Controller
         return view('admin/novaos/releases/form', compact('project', 'release'));
     }
 
-    public function update(Request $request, Release $release)
+    public function update(Request $request, Release $release, ReleaseFileStorage $releaseFiles)
     {
         abort_unless($release->project?->slug === 'novaos', 404);
         $data = $this->validated($request, $release, false);
@@ -74,15 +71,18 @@ class NovaosReleaseController extends Controller
         $data['is_published'] = $request->boolean('is_published');
         $data['published_at'] = $data['is_published'] ? ($release->published_at ?: now()) : null;
 
+        $project = $this->project();
+
         if ($request->hasFile('package')) {
             $file = $request->file('package');
-            if ($release->file_path && Storage::disk('local')->exists($release->file_path)) {
-                Storage::disk('local')->delete($release->file_path);
+            $releaseFiles->delete($release->file_path);
+            $stored = $releaseFiles->store($file, $project, $data['version']);
+            $data = array_merge($data, $stored);
+        } elseif ($release->file_path && (string) $release->version !== (string) $data['version']) {
+            $relocated = $releaseFiles->relocate($release->file_path, $project, $data['version']);
+            if ($relocated) {
+                $data = array_merge($data, $relocated);
             }
-            $data['file_path'] = $file->store('releases/novaos', 'local');
-            $data['file_name'] = $file->getClientOriginalName();
-            $data['file_size'] = $file->getSize();
-            $data['sha256'] = hash_file('sha256', $file->getRealPath());
         }
 
         $release->update($data);
@@ -97,12 +97,10 @@ class NovaosReleaseController extends Controller
         return back()->with('success', $release->is_published ? 'NOVAOS release published.' : 'NOVAOS release unpublished.');
     }
 
-    public function destroy(Release $release)
+    public function destroy(Release $release, ReleaseFileStorage $releaseFiles)
     {
         abort_unless($release->project?->slug === 'novaos', 404);
-        if ($release->file_path && Storage::disk('local')->exists($release->file_path)) {
-            Storage::disk('local')->delete($release->file_path);
-        }
+        $releaseFiles->delete($release->file_path);
         $release->delete();
         return back()->with('success', 'NOVAOS release deleted.');
     }
