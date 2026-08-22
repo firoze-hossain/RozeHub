@@ -110,3 +110,9 @@ Development setup remains PHP/Laravel/Blade/Livewire/CSS only; no Node.js, npm, 
 
 ### Rich editor selection persistence
 The documentation editor now preserves the selected text while repeatedly changing font size. The selection remains active after `+`, `−`, font-size dropdown changes, and `Ctrl/Cmd +` / `Ctrl/Cmd -`. Clicking outside the editor clears the saved selection as expected.
+
+## Desktop release and update distribution
+
+RozeHub includes a version-aware update API for all software projects. Desktop clients can check their installed version, platform, architecture and release channel, then receive a signed/hashed package URL and update policy. Large installers are stored outside the Laravel project; MySQL stores only release metadata and the relative package path.
+
+See `docs/desktop-update-api.md` for the API contract.

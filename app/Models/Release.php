@@ -8,11 +8,24 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Release extends Model
 {
-    protected $fillable = ['software_project_id', 'version', 'major_version', 'codename', 'build_number', 'platform', 'architecture', 'channel', 'file_path', 'file_name', 'file_size', 'sha256', 'notes', 'is_published', 'published_at', 'downloads_count'];
+    protected $fillable = ['software_project_id', 'version', 'major_version', 'codename', 'build_number', 'platform', 'architecture', 'channel', 'minimum_version', 'is_mandatory', 'file_path', 'file_name', 'file_size', 'sha256', 'notes', 'is_published', 'published_at', 'downloads_count'];
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $release): void {
+            $release->release_identity_hash = hash('sha256', implode('|', [
+                (string) $release->software_project_id,
+                (string) $release->version,
+                (string) $release->platform,
+                (string) $release->architecture,
+                (string) $release->channel,
+            ]));
+        });
+    }
 
     protected function casts(): array
     {
-        return ['is_published' => 'boolean', 'published_at' => 'datetime'];
+        return ['is_published' => 'boolean', 'is_mandatory' => 'boolean', 'published_at' => 'datetime'];
     }
 
     public function project(): BelongsTo

@@ -41,12 +41,18 @@ CREATE TABLE releases (
  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
  software_project_id BIGINT UNSIGNED NOT NULL,
  version VARCHAR(255) NOT NULL,
+ major_version VARCHAR(80) NULL,
+ codename VARCHAR(80) NULL,
+ build_number VARCHAR(80) NULL,
  platform VARCHAR(255) NOT NULL,
  architecture VARCHAR(255) NOT NULL DEFAULT 'x64',
  channel VARCHAR(255) NOT NULL DEFAULT 'Stable',
+ minimum_version VARCHAR(80) NULL,
+ is_mandatory TINYINT(1) NOT NULL DEFAULT 0,
  file_path VARCHAR(255) NULL,
  file_name VARCHAR(255) NULL,
  file_size BIGINT UNSIGNED NULL,
+ sha256 VARCHAR(64) NULL,
  notes TEXT NULL,
  is_published TINYINT(1) NOT NULL DEFAULT 0,
  published_at TIMESTAMP NULL DEFAULT NULL,
@@ -54,7 +60,8 @@ CREATE TABLE releases (
  created_at TIMESTAMP NULL DEFAULT NULL,
  updated_at TIMESTAMP NULL DEFAULT NULL,
  PRIMARY KEY (id),
- UNIQUE KEY release_platform_version_unique (software_project_id,version,platform,architecture),
+ UNIQUE KEY release_identity_unique (software_project_id,version,platform,architecture,channel),
+ KEY release_update_lookup_idx (software_project_id,platform,architecture,channel,is_published),
  CONSTRAINT releases_software_project_id_foreign FOREIGN KEY (software_project_id) REFERENCES software_projects(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

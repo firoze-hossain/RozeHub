@@ -2,9 +2,9 @@
 use App\Http\Controllers\AdminAuthController; use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminAccountController; use App\Http\Controllers\AdminProjectController; use App\Http\Controllers\AdminReleaseController; use App\Http\Controllers\AdminReviewController; use App\Http\Controllers\ReleaseDownloadController;
 use App\Http\Controllers\NovaosAdminController;
-use App\Http\Controllers\NovaosReleaseController; use App\Livewire\Hub; use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\NovaosReleaseController; use App\Http\Controllers\AdminReleaseUploadController; use App\Livewire\Hub; use Illuminate\Support\Facades\Route;
 Route::get('/',Hub::class)->name('hub');
-Route::get('/download/{release}',ReleaseDownloadController::class)->name('releases.download');
+Route::get('/download/{release}',ReleaseDownloadController::class)->middleware('throttle:30,1')->name('releases.download');
 Route::get('/admin/login',[AdminAuthController::class,'showLogin'])->name('admin.login');
 Route::post('/admin/login',[AdminAuthController::class,'login'])->name('admin.login.submit');
 Route::post('/admin/logout',[AdminAuthController::class,'logout'])->name('admin.logout');
@@ -25,6 +25,9 @@ Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(func
  Route::put('/releases/{release}',[AdminReleaseController::class,'update'])->name('releases.update');
  Route::post('/releases/{release}/toggle',[AdminReleaseController::class,'toggle'])->name('releases.toggle');
  Route::delete('/releases/{release}',[AdminReleaseController::class,'destroy'])->name('releases.destroy');
+ Route::post('/release-uploads/start',[AdminReleaseUploadController::class,'start'])->name('release-uploads.start');
+ Route::post('/release-uploads/chunk',[AdminReleaseUploadController::class,'chunk'])->name('release-uploads.chunk');
+ Route::delete('/release-uploads/{token}',[AdminReleaseUploadController::class,'cancel'])->name('release-uploads.cancel');
  Route::get('/novaos',[NovaosAdminController::class,'index'])->name('novaos.index');
  Route::get('/novaos/releases',[NovaosReleaseController::class,'index'])->name('novaos.releases.index');
  Route::get('/novaos/releases/create',[NovaosReleaseController::class,'create'])->name('novaos.releases.create');
@@ -37,6 +40,12 @@ Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(func
  Route::post('/reviews/{review}/toggle',[AdminReviewController::class,'toggle'])->name('reviews.toggle');
  Route::delete('/reviews/{review}',[AdminReviewController::class,'destroy'])->name('reviews.destroy');
 });
+
+
+// Public desktop update API. No login is required.
+Route::get('/api/v1/updates/{project:slug}', [\App\Http\Controllers\Api\UpdateController::class, 'check'])->middleware('throttle:60,1')->name('api.updates.check');
+Route::get('/api/v1/updates/{project:slug}/releases', [\App\Http\Controllers\Api\UpdateController::class, 'releases'])->middleware('throttle:60,1')->name('api.updates.releases');
+Route::get('/api/v1/releases/{release}/download', [\App\Http\Controllers\Api\UpdateController::class, 'download'])->middleware('throttle:30,1')->name('api.updates.download');
 
 
 // Public documentation

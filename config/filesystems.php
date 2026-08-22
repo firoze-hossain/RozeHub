@@ -28,6 +28,9 @@ return [
     |
     */
 
+    'release_storage_path' => env('ROZEHUB_RELEASE_STORAGE_PATH', dirname(base_path()).DIRECTORY_SEPARATOR.'rozehub-release-storage'),
+    'release_upload_temp_path' => env('ROZEHUB_RELEASE_UPLOAD_TEMP_PATH', dirname(base_path()).DIRECTORY_SEPARATOR.'rozehub-release-upload-temp'),
+
     'disks' => [
 
         'local' => [
@@ -35,6 +38,13 @@ return [
             'root' => storage_path('app/private'),
             'serve' => true,
             'throw' => false,
+            'report' => false,
+        ],
+
+        'releases' => [
+            'driver' => 'local',
+            'root' => env('ROZEHUB_RELEASE_STORAGE_PATH', dirname(base_path()).DIRECTORY_SEPARATOR.'rozehub-release-storage'),
+            'throw' => true,
             'report' => false,
         ],
 
