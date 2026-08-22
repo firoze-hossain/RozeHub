@@ -20,4 +20,4 @@
 </main>
 <footer class="docs-footer"><span>RozeHub Documentation</span><span>Laravel · PHP · No Node.js required</span></footer>
 </body></html>
-<?php /**PATH /home/firoze/Downloads/RozeHub-rich-documentation-editor-size-controls/RozeHub-final/resources/views/docs/index.blade.php ENDPATH**/ ?>
+<?php /**PATH /home/firoze/Downloads/RozeHub-documentation-size-controls-migration-fixed/RozeHub-final/resources/views/docs/index.blade.php ENDPATH**/ ?>
