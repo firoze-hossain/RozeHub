@@ -58,6 +58,11 @@ class MarketplaceRelease extends Model
         return $this->belongsTo(MarketplaceItem::class, 'marketplace_item_id');
     }
 
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(MarketplaceSubmission::class);
+    }
+
     public function dependencies(): HasMany
     {
         return $this->hasMany(MarketplaceDependency::class);

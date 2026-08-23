@@ -4,10 +4,12 @@ namespace App\Services;
 
 use App\Models\Release;
 use App\Models\SoftwareProject;
+use App\Models\MarketplaceItem;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 use RuntimeException;
 
 class ReleaseStorageService
@@ -37,55 +39,15 @@ class ReleaseStorageService
 
     public function consumeUploadToken(string $token, SoftwareProject $project, array $metadata): array
     {
-        $token = $this->safeToken($token);
-        $manifestPath = $this->manifestPath($token);
-        $partPath = $this->partPath($token);
-
-        if (!File::exists($manifestPath) || !File::exists($partPath)) {
-            throw new RuntimeException('The uploaded package session has expired or no longer exists.');
-        }
-
-        $manifest = json_decode((string) File::get($manifestPath), true);
-        if (!is_array($manifest) || ($manifest['complete'] ?? false) !== false) {
-            throw new RuntimeException('The uploaded package session is invalid.');
-        }
-
-        $actualSize = File::size($partPath);
-        $expectedSize = (int) ($manifest['total_size'] ?? 0);
-        $expectedChunks = (int) ($manifest['total_chunks'] ?? 0);
-        $nextChunk = (int) ($manifest['next_chunk'] ?? 0);
-
-        if ($expectedSize < 1 || $expectedChunks < 1 || $nextChunk !== $expectedChunks || $actualSize !== $expectedSize) {
-            throw new RuntimeException('The uploaded package is incomplete. Please upload it again.');
-        }
-
+        $manifest = $this->readUploadManifest($token);
+        $this->assertUploadOwner($manifest);
+        $originalName = $this->safeFileName((string) ($manifest['file_name'] ?? 'package.bin'));
+        $actualSize = $this->uploadedChunkSize($token, $manifest);
         $this->assertSize($actualSize);
 
-        $originalName = $this->safeFileName((string) ($manifest['file_name'] ?? 'package.bin'));
         $relativePath = $this->relativePath($project, $metadata, $originalName);
-        $this->disk()->makeDirectory(dirname($relativePath));
-        $targetPath = $this->disk()->path($relativePath);
-
-        if (File::exists($targetPath)) {
-            File::delete($targetPath);
-        }
-
-        if (!@rename($partPath, $targetPath)) {
-            if (!@copy($partPath, $targetPath)) {
-                throw new RuntimeException('The uploaded package could not be moved into release storage.');
-            }
-            File::delete($partPath);
-        }
-
-        $sha256 = hash_file('sha256', $targetPath);
-        File::delete($manifestPath);
-
-        return [
-            'file_path' => $relativePath,
-            'file_name' => $originalName,
-            'file_size' => $actualSize,
-            'sha256' => $sha256,
-        ];
+        $this->finalizeChunkedUpload($token, $manifest, $relativePath);
+        return $this->finalizedMetadata($relativePath, $originalName, $actualSize);
     }
 
     public function storeMarketplaceUploadedFile(UploadedFile $file, MarketplaceItem $item, array $metadata): array
@@ -106,55 +68,15 @@ class ReleaseStorageService
 
     public function consumeUploadTokenToMarketplace(string $token, MarketplaceItem $item, array $metadata): array
     {
-        $token = $this->safeToken($token);
-        $manifestPath = $this->manifestPath($token);
-        $partPath = $this->partPath($token);
-
-        if (!File::exists($manifestPath) || !File::exists($partPath)) {
-            throw new RuntimeException('The uploaded package session has expired or no longer exists.');
-        }
-
-        $manifest = json_decode((string) File::get($manifestPath), true);
-        if (!is_array($manifest) || ($manifest['complete'] ?? false) !== true) {
-            throw new RuntimeException('The uploaded marketplace package is incomplete.');
-        }
-
-        $actualSize = File::size($partPath);
-        $expectedSize = (int) ($manifest['total_size'] ?? 0);
-        $expectedChunks = (int) ($manifest['total_chunks'] ?? 0);
-        $nextChunk = (int) ($manifest['next_chunk'] ?? 0);
-
-        if ($expectedSize < 1 || $expectedChunks < 1 || $nextChunk !== $expectedChunks || $actualSize !== $expectedSize) {
-            throw new RuntimeException('The uploaded marketplace package is incomplete.');
-        }
-
+        $manifest = $this->readUploadManifest($token);
+        $this->assertUploadOwner($manifest);
+        $originalName = $this->safeFileName((string) ($manifest['file_name'] ?? 'package.bin'));
+        $actualSize = $this->uploadedChunkSize($token, $manifest);
         $this->assertSize($actualSize);
 
-        $originalName = $this->safeFileName((string) ($manifest['file_name'] ?? 'package.bin'));
         $relativePath = $this->marketplaceRelativePath($item, $metadata, $originalName);
-        $this->disk()->makeDirectory(dirname($relativePath));
-        $targetPath = $this->disk()->path($relativePath);
-
-        if (File::exists($targetPath)) {
-            File::delete($targetPath);
-        }
-
-        if (!@rename($partPath, $targetPath)) {
-            if (!@copy($partPath, $targetPath)) {
-                throw new RuntimeException('The marketplace package could not be moved into release storage.');
-            }
-            File::delete($partPath);
-        }
-
-        $sha256 = hash_file('sha256', $targetPath);
-        File::delete($manifestPath);
-
-        return [
-            'file_path' => $relativePath,
-            'file_name' => $originalName,
-            'file_size' => $actualSize,
-            'sha256' => $sha256,
-        ];
+        $this->finalizeChunkedUpload($token, $manifest, $relativePath);
+        return $this->finalizedMetadata($relativePath, $originalName, $actualSize);
     }
 
     private function marketplaceRelativePath(MarketplaceItem $item, array $metadata, string $fileName): string
@@ -189,10 +111,14 @@ class ReleaseStorageService
     public function cleanupUpload(string $token): void
     {
         $token = $this->safeToken($token);
-        foreach ([$this->manifestPath($token), $this->partPath($token)] as $path) {
-            if (File::exists($path)) {
-                File::delete($path);
-            }
+        $manifestPath = $this->manifestPath($token);
+        $chunkDir = $this->chunkDirectory($token);
+
+        if (File::exists($manifestPath)) {
+            File::delete($manifestPath);
+        }
+        if (File::isDirectory($chunkDir)) {
+            File::deleteDirectory($chunkDir);
         }
     }
 
@@ -208,90 +134,84 @@ class ReleaseStorageService
 
         $dir = $this->tempDirectory();
         File::ensureDirectoryExists($dir);
-        $manifestPath = $this->manifestPath($token);
-        $partPath = $this->partPath($token);
+        $this->cleanupUpload($token);
+        File::ensureDirectoryExists($this->chunkDirectory($token));
 
-        File::put($manifestPath, json_encode([
+        File::put($this->manifestPath($token), json_encode([
             'file_name' => $fileName,
             'total_size' => $totalSize,
             'total_chunks' => $totalChunks,
-            'next_chunk' => 0,
             'complete' => false,
             'created_at' => now()->toIso8601String(),
+            'owner_user_id' => Auth::id(),
         ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
 
-        if (File::exists($partPath)) {
-            File::delete($partPath);
-        }
-
-        return ['next_chunk' => 0];
+        return ['next_chunk' => 0, 'total_chunks' => $totalChunks];
     }
 
     public function appendChunk(string $token, int $chunkIndex, int $totalChunks, UploadedFile $chunk): array
     {
         $token = $this->safeToken($token);
-        $manifestPath = $this->manifestPath($token);
-        $partPath = $this->partPath($token);
+        $manifest = $this->readUploadManifest($token);
+        $this->assertUploadOwner($manifest);
 
-        if (!File::exists($manifestPath)) {
-            throw new RuntimeException('Upload session was not initialized.');
-        }
-
-        $manifest = json_decode((string) File::get($manifestPath), true);
-        if (!is_array($manifest)) {
-            throw new RuntimeException('Upload session is invalid.');
-        }
-
-        if ((int) $manifest['total_chunks'] !== $totalChunks) {
+        if ((int) ($manifest['total_chunks'] ?? 0) !== $totalChunks) {
             throw new RuntimeException('Upload chunk count does not match the initialized upload.');
         }
+        if ($chunkIndex < 0 || $chunkIndex >= $totalChunks) {
+            throw new RuntimeException('Invalid upload chunk index.');
+        }
 
-        $nextChunk = (int) $manifest['next_chunk'];
-        if ($chunkIndex < $nextChunk) {
+        $chunkSize = (int) $chunk->getSize();
+        // Deliberately below the default PHP 2 MB upload_max_filesize.
+        if ($chunkSize < 1 || $chunkSize > 1_900_000) {
+            throw new RuntimeException('Each upload chunk must be smaller than 1.9 MB.');
+        }
+
+        $expected = $this->expectedChunkSize($manifest, $chunkIndex);
+        if ($chunkSize !== $expected) {
+            throw new RuntimeException('The uploaded chunk size is invalid. Please retry this chunk.');
+        }
+
+        $chunkDir = $this->chunkDirectory($token);
+        File::ensureDirectoryExists($chunkDir);
+        $chunkPath = $this->chunkPath($token, $chunkIndex);
+
+        if (File::exists($chunkPath) && File::size($chunkPath) === $chunkSize) {
             return [
-                'next_chunk' => $nextChunk,
-                'complete' => (bool) $manifest['complete'],
-                'received_bytes' => File::exists($partPath) ? File::size($partPath) : 0,
+                'chunk_index' => $chunkIndex,
+                'received_bytes' => $this->uploadedChunkSize($token, $manifest),
                 'total_bytes' => (int) $manifest['total_size'],
                 'alreadyReceived' => true,
             ];
         }
-        if ($chunkIndex > $nextChunk) {
-            throw new RuntimeException('Upload chunks must arrive in order.');
-        }
 
-        $chunkSize = (int) $chunk->getSize();
-        if ($chunkSize < 1 || $chunkSize > 6_500_000) {
-            throw new RuntimeException('Each upload chunk must be between 1 byte and 6.5 MB.');
-        }
-
-        $in = fopen($chunk->getRealPath(), 'rb');
-        $out = fopen($partPath, $chunkIndex === 0 ? 'wb' : 'ab');
-        if (!$in || !$out) {
-            if (is_resource($in)) fclose($in);
-            if (is_resource($out)) fclose($out);
+        // Each chunk gets its own file. This makes parallel uploads safe: there is no
+        // shared append stream and no manifest race between concurrent HTTP requests.
+        $tmpPath = $chunkPath . '.tmp-' . Str::random(8);
+        if (!@copy($chunk->getRealPath(), $tmpPath)) {
             throw new RuntimeException('Unable to write the upload chunk.');
         }
-
-        stream_copy_to_stream($in, $out);
-        fclose($in);
-        fclose($out);
-
-        $manifest['next_chunk'] = $chunkIndex + 1;
-        $manifest['complete'] = $manifest['next_chunk'] === $manifest['total_chunks'];
-        File::put($manifestPath, json_encode($manifest, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
-
-        $currentSize = File::size($partPath);
-        if ($currentSize > (int) $manifest['total_size']) {
-            $this->cleanupUpload($token);
-            throw new RuntimeException('The upload exceeded the declared file size.');
+        if (File::size($tmpPath) !== $chunkSize) {
+            File::delete($tmpPath);
+            throw new RuntimeException('The uploaded chunk was truncated. Please retry.');
+        }
+        if (File::exists($chunkPath)) {
+            File::delete($chunkPath);
+        }
+        if (!@rename($tmpPath, $chunkPath)) {
+            File::delete($tmpPath);
+            throw new RuntimeException('Unable to finalize the upload chunk.');
         }
 
+        $received = $this->uploadedChunkSize($token, $manifest);
+        $complete = $received === (int) $manifest['total_size'] && $this->allChunksPresent($token, $manifest);
+
         return [
-            'next_chunk' => $manifest['next_chunk'],
-            'complete' => $manifest['complete'],
-            'received_bytes' => $currentSize,
+            'chunk_index' => $chunkIndex,
+            'received_bytes' => $received,
             'total_bytes' => (int) $manifest['total_size'],
+            'complete' => $complete,
         ];
     }
 
@@ -299,23 +219,121 @@ class ReleaseStorageService
     {
         $deleted = 0;
         $dir = $this->tempDirectory();
-        if (!File::isDirectory($dir)) {
-            return 0;
-        }
+        if (!File::isDirectory($dir)) return 0;
+        $cutoff = now()->subHours($hours)->getTimestamp();
 
         foreach (File::files($dir) as $file) {
-            if ($file->getMTime() < now()->subHours($hours)->getTimestamp()) {
+            if ($file->getMTime() < $cutoff) {
                 File::delete($file->getPathname());
                 $deleted++;
             }
         }
-
+        foreach (File::directories($dir) as $directory) {
+            if (File::lastModified($directory) < $cutoff) {
+                File::deleteDirectory($directory);
+                $deleted++;
+            }
+        }
         return $deleted;
+    }
+
+    private function readUploadManifest(string $token): array
+    {
+        $token = $this->safeToken($token);
+        $path = $this->manifestPath($token);
+        if (!File::exists($path)) {
+            throw new RuntimeException('Upload session was not initialized or has expired.');
+        }
+        $manifest = json_decode((string) File::get($path), true);
+        if (!is_array($manifest)) throw new RuntimeException('Upload session is invalid.');
+        return $manifest;
+    }
+
+    private function assertUploadOwner(array $manifest): void
+    {
+        if (isset($manifest['owner_user_id']) && Auth::id() !== null && (int) $manifest['owner_user_id'] !== (int) Auth::id()) {
+            throw new RuntimeException('This upload session belongs to another account.');
+        }
+    }
+
+    private function expectedChunkSize(array $manifest, int $index): int
+    {
+        $total = (int) ($manifest['total_size'] ?? 0);
+        $chunks = (int) ($manifest['total_chunks'] ?? 0);
+        $max = 1_835_008; // 1.75 MiB, matching the browser uploader.
+        if ($index < 0 || $index >= $chunks || $total < 1) {
+            throw new RuntimeException('Invalid upload chunk.');
+        }
+        $start = $index * $max;
+        return min($max, $total - $start);
+    }
+
+    private function uploadedChunkSize(string $token, array $manifest): int
+    {
+        $total = 0;
+        $chunks = (int) ($manifest['total_chunks'] ?? 0);
+        for ($i = 0; $i < $chunks; $i++) {
+            $path = $this->chunkPath($token, $i);
+            if (File::exists($path)) $total += File::size($path);
+        }
+        return $total;
+    }
+
+    private function allChunksPresent(string $token, array $manifest): bool
+    {
+        $chunks = (int) ($manifest['total_chunks'] ?? 0);
+        for ($i = 0; $i < $chunks; $i++) {
+            if (!File::exists($this->chunkPath($token, $i))) return false;
+        }
+        return true;
+    }
+
+    private function finalizeChunkedUpload(string $token, array $manifest, string $relativePath): void
+    {
+        $expectedSize = (int) ($manifest['total_size'] ?? 0);
+        $expectedChunks = (int) ($manifest['total_chunks'] ?? 0);
+        if ($expectedSize < 1 || $expectedChunks < 1 || !$this->allChunksPresent($token, $manifest)) {
+            throw new RuntimeException('The uploaded package is incomplete. Please upload it again.');
+        }
+        $actualSize = $this->uploadedChunkSize($token, $manifest);
+        if ($actualSize !== $expectedSize) {
+            throw new RuntimeException('The uploaded package size does not match the original file.');
+        }
+
+        $this->disk()->makeDirectory(dirname($relativePath));
+        $targetPath = $this->disk()->path($relativePath);
+        if (File::exists($targetPath)) File::delete($targetPath);
+
+        $out = @fopen($targetPath, 'wb');
+        if (!$out) throw new RuntimeException('The package destination could not be opened.');
+        try {
+            for ($i = 0; $i < $expectedChunks; $i++) {
+                $chunkPath = $this->chunkPath($token, $i);
+                $in = @fopen($chunkPath, 'rb');
+                if (!$in) throw new RuntimeException('A package chunk is missing during finalization.');
+                stream_copy_to_stream($in, $out);
+                fclose($in);
+            }
+        } finally {
+            fclose($out);
+        }
+
+        if (File::size($targetPath) !== $expectedSize) {
+            File::delete($targetPath);
+            throw new RuntimeException('The final package size is invalid.');
+        }
+
+        $this->cleanupUpload($token);
     }
 
     private function metadata(string $relativePath, string $originalName): array
     {
         $absolute = $this->disk()->path($relativePath);
+
+        if (!File::exists($absolute)) {
+            throw new RuntimeException('The stored release package could not be found after upload.');
+        }
+
         return [
             'file_path' => $relativePath,
             'file_name' => $originalName,
@@ -326,33 +344,52 @@ class ReleaseStorageService
 
     private function relativePath(SoftwareProject $project, array $metadata, string $fileName): string
     {
-        $projectSlug = Str::slug($project->slug ?: $project->name);
+        $projectSlug = Str::slug((string) ($project->slug ?: $project->name)) ?: 'project';
         $version = Str::slug((string) ($metadata['version'] ?? 'unknown')) ?: 'unknown';
         $platform = Str::slug((string) ($metadata['platform'] ?? 'unknown')) ?: 'unknown';
         $architecture = Str::slug((string) ($metadata['architecture'] ?? 'unknown')) ?: 'unknown';
         $channel = Str::slug((string) ($metadata['channel'] ?? 'stable')) ?: 'stable';
 
-        return implode('/', [$projectSlug, $version, $platform, $architecture, $channel, $fileName]);
+        return implode('/', [
+            $projectSlug,
+            $version,
+            $platform,
+            $architecture,
+            $channel,
+            $fileName,
+        ]);
     }
 
+    /**
+     * Keep only a filename. Never allow a client supplied filename to create
+     * directories or traverse outside the configured release storage root.
+     */
     private function safeFileName(string $fileName): string
     {
         $fileName = basename(str_replace('\\', '/', $fileName));
         $fileName = preg_replace('/[^A-Za-z0-9._()\- ]+/', '-', $fileName) ?: 'package.bin';
-        return trim($fileName, '. ' ) ?: 'package.bin';
+        $fileName = trim($fileName, '. ');
+
+        return $fileName !== '' ? $fileName : 'package.bin';
     }
 
-    private function safeToken(string $token): string
+    private function finalizedMetadata(string $relativePath, string $originalName, int $actualSize): array
     {
-        if (!preg_match('/^[A-Za-z0-9_-]{20,100}$/', $token)) {
-            throw new RuntimeException('Invalid upload token.');
-        }
-        return $token;
+        $absolute = $this->disk()->path($relativePath);
+        return [
+            'file_path' => $relativePath,
+            'file_name' => $originalName,
+            'file_size' => $actualSize,
+            'sha256' => hash_file('sha256', $absolute),
+        ];
     }
 
     private function tempDirectory(): string
     {
-        return (string) config('filesystems.release_upload_temp_path');
+        return (string) config(
+            'filesystems.release_upload_temp_path',
+            dirname(base_path()).DIRECTORY_SEPARATOR.'rozehub-release-upload-temp'
+        );
     }
 
     private function manifestPath(string $token): string
@@ -360,9 +397,32 @@ class ReleaseStorageService
         return $this->tempDirectory().DIRECTORY_SEPARATOR.$token.'.json';
     }
 
-    private function partPath(string $token): string
+    private function chunkDirectory(string $token): string
     {
-        return $this->tempDirectory().DIRECTORY_SEPARATOR.$token.'.part';
+        return $this->tempDirectory().DIRECTORY_SEPARATOR.$token;
+    }
+
+    private function chunkPath(string $token, int $index): string
+    {
+        if ($index < 0 || $index > 4999) {
+            throw new RuntimeException('Invalid upload chunk index.');
+        }
+
+        return $this->chunkDirectory($token).DIRECTORY_SEPARATOR.sprintf('%05d.part', $index);
+    }
+
+    private function safeToken(string $token): string
+    {
+        $token = trim($token);
+
+        // Upload tokens are generated by Laravel's Str::random() and contain
+        // only letters/numbers. Keep this strict because the token is used in
+        // filesystem paths and must never be allowed to escape the temp folder.
+        if (!preg_match('/^[A-Za-z0-9_-]{20,100}$/', $token)) {
+            throw new RuntimeException('Invalid upload session token.');
+        }
+
+        return $token;
     }
 
     private function assertSize(?int $size): void

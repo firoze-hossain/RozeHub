@@ -33,7 +33,7 @@ class AdminReleaseUploadController extends Controller
             'token' => ['required', 'string', 'regex:/^[A-Za-z0-9_-]{20,100}$/'],
             'chunk_index' => ['required', 'integer', 'min:0', 'max:4999'],
             'total_chunks' => ['required', 'integer', 'min:1', 'max:5000'],
-            'chunk' => ['required', 'file', 'max:6500'],
+            'chunk' => ['required', 'file', 'max:1900'],
         ]);
 
         return response()->json($this->storage->appendChunk(

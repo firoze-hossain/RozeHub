@@ -10,6 +10,7 @@ class MarketplaceItem extends Model
 {
     protected $fillable = [
         'software_project_id',
+        'owner_user_id',
         'item_type',
         'name',
         'slug',
@@ -40,6 +41,16 @@ class MarketplaceItem extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(SoftwareProject::class, 'software_project_id');
+    }
+
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_user_id');
+    }
+
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(MarketplaceSubmission::class);
     }
 
     public function releases(): HasMany

@@ -64,4 +64,4 @@
 
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('admin.layout', ['heading' => 'Marketplace'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/firoze/Downloads/RozeHub-marketplace-plugin-extension-final/resources/views/admin/marketplace/index.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('admin.layout', ['heading' => 'Marketplace'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/firoze/Documents/RozeHub-marketplace-review-fix-v8/resources/views/admin/marketplace/index.blade.php ENDPATH**/ ?>

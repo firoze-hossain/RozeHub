@@ -147,3 +147,27 @@ Desktop API:
 
 Actual packages are stored outside the Laravel project and outside MySQL.
 Only metadata and a relative storage path are stored in the database.
+
+## Community Marketplace Moderation
+
+RozeHub now supports a moderated developer marketplace for **Lumina** and **DBNavigator** only.
+
+### Publishing lifecycle
+
+`DRAFT → SUBMITTED → UNDER_REVIEW → NEEDS_CHANGES / REJECTED / APPROVED → PUBLISHED`
+
+Developers can create accounts at `/developer/register`, create plugins/extensions, upload versioned packages, declare permissions and compatibility, and submit releases. Packages are stored in external release storage; MySQL stores metadata and the relative storage path.
+
+### Security review
+
+Every submission receives automated checks for package integrity, declared permissions, package type and archive contents. Risk is classified as `LOW`, `MEDIUM`, `HIGH` or `CRITICAL`. Administrators can manually adjust each risk check and must record a reason when requesting changes, rejecting or approving a submission.
+
+The automated assessment is advisory; it does not claim to prove that a package is malware-free.
+
+### Admin moderation
+
+Use `/admin/marketplace/review` for the review queue. Administrators can filter by status, risk, application and item type, inspect package metadata/checksum/permissions, review the audit trail, request changes, reject, approve & publish, or unpublish a published release.
+
+### Developer portal
+
+Use `/developer` to manage marketplace items, releases, submissions and notifications. Only `lumina` and `dbnavigator` software projects are accepted for community submissions.

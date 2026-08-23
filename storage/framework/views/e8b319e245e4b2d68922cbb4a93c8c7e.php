@@ -77,4 +77,4 @@
 </form>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('admin.layout', ['heading' => $mode === 'create' ? 'Create marketplace item' : 'Edit marketplace item'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/firoze/projects/others/RozeHub/resources/views/admin/marketplace/item-form.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('admin.layout', ['heading' => $mode === 'create' ? 'Create marketplace item' : 'Edit marketplace item'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/firoze/Documents/RozeHub-marketplace-review-fix-v8/resources/views/admin/marketplace/item-form.blade.php ENDPATH**/ ?>

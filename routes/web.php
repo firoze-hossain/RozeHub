@@ -99,3 +99,41 @@ Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(func
     Route::post('/marketplace/releases/{release}/toggle', [\App\Http\Controllers\AdminMarketplaceController::class, 'toggleRelease'])->name('marketplace.releases.toggle');
     Route::delete('/marketplace/releases/{release}', [\App\Http\Controllers\AdminMarketplaceController::class, 'destroyRelease'])->name('marketplace.releases.destroy');
 });
+
+
+// Community developer portal. Only authenticated developers can create submissions.
+Route::get('/developer/login', [\App\Http\Controllers\DeveloperAuthController::class, 'loginForm'])->name('developer.login');
+Route::post('/developer/login', [\App\Http\Controllers\DeveloperAuthController::class, 'login'])->name('developer.login.submit');
+Route::get('/developer/register', [\App\Http\Controllers\DeveloperAuthController::class, 'registerForm'])->name('developer.register');
+Route::post('/developer/register', [\App\Http\Controllers\DeveloperAuthController::class, 'register'])->name('developer.register.submit');
+Route::middleware('auth')->prefix('developer')->name('developer.')->group(function () {
+    Route::post('/logout', [\App\Http\Controllers\DeveloperAuthController::class, 'logout'])->name('logout');
+    Route::get('/', [\App\Http\Controllers\DeveloperMarketplaceController::class, 'dashboard'])->name('dashboard');
+    Route::get('/notifications', [\App\Http\Controllers\DeveloperMarketplaceController::class, 'notifications'])->name('notifications');
+    Route::patch('/notifications/{notification}/read', [\App\Http\Controllers\DeveloperMarketplaceController::class, 'readNotification'])->name('notifications.read');
+    Route::get('/marketplace/create', [\App\Http\Controllers\DeveloperMarketplaceController::class, 'create'])->name('marketplace.create');
+    Route::post('/marketplace', [\App\Http\Controllers\DeveloperMarketplaceController::class, 'store'])->name('marketplace.store');
+    Route::get('/marketplace/{item}/edit', [\App\Http\Controllers\DeveloperMarketplaceController::class, 'edit'])->name('marketplace.edit');
+    Route::put('/marketplace/{item}', [\App\Http\Controllers\DeveloperMarketplaceController::class, 'update'])->name('marketplace.update');
+    Route::get('/marketplace/{item}/releases/create', [\App\Http\Controllers\DeveloperMarketplaceController::class, 'createRelease'])->name('marketplace.releases.create');
+    Route::post('/marketplace/{item}/releases', [\App\Http\Controllers\DeveloperMarketplaceController::class, 'storeRelease'])->name('marketplace.releases.store');
+    Route::get('/marketplace/releases/{release}/edit', [\App\Http\Controllers\DeveloperMarketplaceController::class, 'editRelease'])->name('marketplace.release.edit');
+    Route::put('/marketplace/releases/{release}', [\App\Http\Controllers\DeveloperMarketplaceController::class, 'updateRelease'])->name('marketplace.release.update');
+    Route::post('/marketplace/releases/{release}/submit', [\App\Http\Controllers\DeveloperMarketplaceController::class, 'submit'])->name('marketplace.submit');
+    Route::get('/marketplace/submissions', [\App\Http\Controllers\DeveloperMarketplaceController::class, 'submissions'])->name('marketplace.submissions');
+    Route::get('/marketplace/submissions/{submission}', [\App\Http\Controllers\DeveloperMarketplaceController::class, 'submission'])->name('marketplace.submission');
+    Route::post('/marketplace/submissions/{submission}/resubmit', [\App\Http\Controllers\DeveloperMarketplaceController::class, 'resubmit'])->name('marketplace.resubmit');
+    Route::post('/uploads/start', [\App\Http\Controllers\AdminReleaseUploadController::class, 'start'])->name('uploads.start');
+    Route::post('/uploads/chunk', [\App\Http\Controllers\AdminReleaseUploadController::class, 'chunk'])->name('uploads.chunk');
+    Route::delete('/uploads/{token}', [\App\Http\Controllers\AdminReleaseUploadController::class, 'cancel'])->name('uploads.cancel');
+});
+
+// Admin marketplace moderation queue.
+Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/marketplace/review', [\App\Http\Controllers\AdminMarketplaceReviewController::class, 'index'])->name('marketplace.review.index');
+    Route::get('/marketplace/review/{submission}', [\App\Http\Controllers\AdminMarketplaceReviewController::class, 'show'])->name('marketplace.review.show');
+    Route::post('/marketplace/review/{submission}/start', [\App\Http\Controllers\AdminMarketplaceReviewController::class, 'start'])->name('marketplace.review.start');
+    Route::patch('/marketplace/review/{submission}/risk', [\App\Http\Controllers\AdminMarketplaceReviewController::class, 'updateRisk'])->name('marketplace.review.risk');
+    Route::post('/marketplace/review/{submission}/decision', [\App\Http\Controllers\AdminMarketplaceReviewController::class, 'decide'])->name('marketplace.review.decide');
+    Route::post('/marketplace/review/{submission}/unpublish', [\App\Http\Controllers\AdminMarketplaceReviewController::class, 'unpublish'])->name('marketplace.review.unpublish');
+});

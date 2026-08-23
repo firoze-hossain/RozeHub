@@ -32,7 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias(['admin' => AdminMiddleware::class]);
 
         $middleware->redirectGuestsTo(
-            fn (Request $request) => route('admin.login')
+            fn (Request $request) => $request->is('developer/*') || $request->is('developer') ? route('developer.login') : route('admin.login')
         );
     })
     ->withExceptions(function (Exceptions $exceptions): void {

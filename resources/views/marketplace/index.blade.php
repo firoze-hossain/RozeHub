@@ -13,7 +13,7 @@
         <span class="mp-badge">ROZEHUB MARKETPLACE</span>
         <h1>Extend your Roze applications.</h1>
         <p>Discover plugins and extensions for Lumina, DBNavigator, and the RozeHub desktop ecosystem. Every package is versioned, compatibility-aware and distributed through RozeHub.</p>
-        <form class="market-search">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:18px"><a class="mp-link" href="{{ route('developer.dashboard') }}">Developer Center →</a></div><form class="market-search">
             <input name="q" value="{{ request('q') }}" placeholder="Search plugins, extensions, database tools…">
             <select name="type"><option value="">All types</option><option value="plugin" @selected(request('type')==='plugin')>Plugins</option><option value="extension" @selected(request('type')==='extension')>Extensions</option></select>
             <button class="admin-button primary">Search</button>
