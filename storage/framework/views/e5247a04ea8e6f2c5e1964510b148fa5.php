@@ -4,9 +4,9 @@
     if (!form) return;
     const submit = form.querySelector('button[type="submit"]');
     const csrf = form.querySelector('input[name="_token"]')?.value || '';
-    const startUrl = @json(route('admin.release-uploads.start'));
-    const chunkUrl = @json(route('admin.release-uploads.chunk'));
-    const cancelBase = @json(url('/admin/release-uploads'));
+    const startUrl = <?php echo json_encode(route('admin.release-uploads.start'), 15, 512) ?>;
+    const chunkUrl = <?php echo json_encode(route('admin.release-uploads.chunk'), 15, 512) ?>;
+    const cancelBase = <?php echo json_encode(url('/admin/release-uploads'), 15, 512) ?>;
     const CHUNK_SIZE = 1.75 * 1024 * 1024;
     const CONCURRENCY = 6;
     const RETRIES = 2;
@@ -67,3 +67,4 @@
     });
 })();
 </script>
+<?php /**PATH /home/firoze/Downloads/RozeHub-release-artifacts-v1/RozeHub-final/resources/views/admin/releases/_chunk-uploader.blade.php ENDPATH**/ ?>

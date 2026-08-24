@@ -50,6 +50,36 @@ class ReleaseStorageService
         return $this->finalizedMetadata($relativePath, $originalName, $actualSize);
     }
 
+    public function storeArtifactUploadedFile(UploadedFile $file, SoftwareProject $project, array $metadata, string $purpose = 'UPDATER'): array
+    {
+        $this->assertSize($file->getSize());
+        $purpose = $this->normalizeArtifactPurpose($purpose);
+        $originalName = $this->safeFileName($file->getClientOriginalName());
+        $relativePath = $this->artifactRelativePath($project, $metadata, $purpose, $originalName);
+        $this->disk()->makeDirectory(dirname($relativePath));
+
+        $stored = $file->storeAs(dirname($relativePath), basename($relativePath), 'releases');
+        if (!$stored) {
+            throw new RuntimeException('The release artifact could not be stored.');
+        }
+
+        return $this->metadata($stored, $originalName);
+    }
+
+    public function consumeUploadTokenToArtifact(string $token, SoftwareProject $project, array $metadata, string $purpose = 'UPDATER'): array
+    {
+        $manifest = $this->readUploadManifest($token);
+        $this->assertUploadOwner($manifest);
+        $purpose = $this->normalizeArtifactPurpose($purpose);
+        $originalName = $this->safeFileName((string) ($manifest['file_name'] ?? 'package.bin'));
+        $actualSize = $this->uploadedChunkSize($token, $manifest);
+        $this->assertSize($actualSize);
+
+        $relativePath = $this->artifactRelativePath($project, $metadata, $purpose, $originalName);
+        $this->finalizeChunkedUpload($token, $manifest, $relativePath);
+        return $this->finalizedMetadata($relativePath, $originalName, $actualSize);
+    }
+
     public function storeMarketplaceUploadedFile(UploadedFile $file, MarketplaceItem $item, array $metadata): array
     {
         $this->assertSize($file->getSize());
@@ -77,6 +107,25 @@ class ReleaseStorageService
         $relativePath = $this->marketplaceRelativePath($item, $metadata, $originalName);
         $this->finalizeChunkedUpload($token, $manifest, $relativePath);
         return $this->finalizedMetadata($relativePath, $originalName, $actualSize);
+    }
+
+    private function artifactRelativePath(SoftwareProject $project, array $metadata, string $purpose, string $fileName): string
+    {
+        $projectSlug = Str::slug((string) ($project->slug ?: $project->name)) ?: 'project';
+        $version = Str::slug((string) ($metadata['version'] ?? 'unknown')) ?: 'unknown';
+        $platform = Str::slug((string) ($metadata['platform'] ?? 'unknown')) ?: 'unknown';
+        $architecture = Str::slug((string) ($metadata['architecture'] ?? 'unknown')) ?: 'unknown';
+        $channel = Str::slug((string) ($metadata['channel'] ?? 'stable')) ?: 'stable';
+        $purpose = strtolower($this->normalizeArtifactPurpose($purpose));
+
+        return implode('/', [
+            $projectSlug, $version, $platform, $architecture, $channel, $purpose, $fileName,
+        ]);
+    }
+
+    private function normalizeArtifactPurpose(string $purpose): string
+    {
+        return strtoupper(trim($purpose)) === 'UPDATER' ? 'UPDATER' : 'INSTALLER';
     }
 
     private function marketplaceRelativePath(MarketplaceItem $item, array $metadata, string $fileName): string

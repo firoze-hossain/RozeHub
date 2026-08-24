@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Release;
 use App\Models\SoftwareProject;
+use App\Models\ReleaseArtifact;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
@@ -84,6 +85,10 @@ class UpdateController extends Controller
             ]);
         }
 
+        $installer = $release->artifacts()->where('purpose', 'INSTALLER')->first();
+        $updater = $release->artifacts()->where('purpose', 'UPDATER')->first();
+        $updateArtifact = $updater ?: $installer;
+
         return response()->json([
             'project' => $project->slug,
             'currentVersion' => $current,
@@ -107,6 +112,8 @@ class UpdateController extends Controller
                 'fileName' => $release->file_name,
                 'fileSize' => (int) $release->file_size,
                 'sha256' => $release->sha256,
+                'installerArtifact' => $this->artifactPayload($installer, $release),
+                'updateArtifact' => $this->artifactPayload($updateArtifact, $release),
                 'publishedAt' => optional($release->published_at)->toIso8601String(),
                 'downloadUrl' => route('api.updates.download', $release),
             ],
@@ -148,7 +155,9 @@ class UpdateController extends Controller
             'fileName' => $release->file_name,
             'fileSize' => (int) $release->file_size,
             'sha256' => $release->sha256,
-            'downloadUrl' => route('api.updates.download', $release),
+            'installerArtifact' => $this->artifactPayload($release->artifacts()->where('purpose', 'INSTALLER')->first(), $release),
+            'updateArtifact' => $this->artifactPayload($release->artifacts()->where('purpose', 'UPDATER')->first(), $release),
+            'downloadUrl' => route('api.updates.download', ['release' => $release, 'purpose' => 'installer']),
             'publishedAt' => optional($release->published_at)->toIso8601String(),
         ])->values();
 
@@ -159,19 +168,49 @@ class UpdateController extends Controller
         ]);
     }
 
-    public function download(Release $release)
+    public function download(Request $request, Release $release)
     {
-        abort_unless($release->is_published && $release->file_path, 404);
-        abort_unless(Storage::disk('releases')->exists($release->file_path), 404);
+        abort_unless($release->is_published, 404);
 
-        $release->increment('downloads_count');
+        $purpose = strtoupper((string) $request->query('purpose', 'INSTALLER')) === 'UPDATER' ? 'UPDATER' : 'INSTALLER';
+        $artifact = $release->artifacts()->where('purpose', $purpose)->first();
+        if (!$artifact && $purpose === 'UPDATER') {
+            $artifact = $release->artifacts()->where('purpose', 'INSTALLER')->first();
+        }
 
-        return Storage::disk('releases')->download($release->file_path, $release->file_name, [
+        $path = $artifact?->file_path ?: $release->file_path;
+        $name = $artifact?->file_name ?: $release->file_name;
+        $size = $artifact?->file_size ?? $release->file_size;
+        $sha256 = $artifact?->sha256 ?? $release->sha256;
+
+        abort_unless($path && Storage::disk('releases')->exists($path), 404);
+
+        if ($artifact) $artifact->increment('downloads_count');
+        else $release->increment('downloads_count');
+
+        return Storage::disk('releases')->download($path, $name, [
             'Content-Type' => 'application/octet-stream',
             'X-RozeHub-Version' => $release->version,
-            'X-RozeHub-SHA256' => (string) $release->sha256,
+            'X-RozeHub-SHA256' => (string) $sha256,
+            'X-RozeHub-Package-Purpose' => $purpose,
+            'X-RozeHub-Package-Type' => strtolower((string) ($artifact?->package_type ?: pathinfo((string) $name, PATHINFO_EXTENSION))),
+            'X-RozeHub-File-Size' => (string) $size,
             'Cache-Control' => 'public, max-age=3600',
         ]);
+    }
+
+    private function artifactPayload(?ReleaseArtifact $artifact, Release $release): ?array
+    {
+        if (!$artifact) return null;
+        return [
+            'id' => $artifact->id,
+            'purpose' => $artifact->purpose,
+            'packageType' => $artifact->package_type,
+            'fileName' => $artifact->file_name,
+            'fileSize' => (int) $artifact->file_size,
+            'sha256' => $artifact->sha256,
+            'downloadUrl' => route('api.updates.download', ['release' => $release, 'purpose' => strtolower($artifact->purpose)]),
+        ];
     }
 
     private function normalizePlatform(string $platform): string

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Release;
 use App\Models\SoftwareProject;
 use App\Services\ReleaseStorageService;
+use App\Models\ReleaseArtifact;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -56,9 +57,18 @@ class AdminReleaseController extends Controller
         $data['published_at'] = $data['is_published'] ? now() : null;
         unset($data['package'], $data['upload_token']);
 
-        Release::create($data);
+        $release = Release::create($data);
+        try {
+            $this->syncInstallerArtifact($release);
+            $this->storeOptionalUpdaterArtifact($request, $release, $project, $data);
+        } catch (Throwable $e) {
+            foreach ($release->artifacts as $artifact) $this->storage->delete($artifact->file_path);
+            if ($release->file_path) $this->storage->delete($release->file_path);
+            $release->delete();
+            throw $e;
+        }
 
-        return redirect()->route('admin.releases.index')->with('success', 'Application release uploaded and stored outside the Laravel project.');
+        return redirect()->route('admin.releases.index')->with('success', 'Application release and distribution artifacts were stored outside the Laravel project.');
     }
 
     public function edit(Release $release)
@@ -87,14 +97,19 @@ class AdminReleaseController extends Controller
             $data = array_merge($data, $this->packageFromRequest($request, $project, $data, true));
         }
 
-        unset($data['package'], $data['upload_token']);
+        unset($data['package'], $data['upload_token'], $data['update_package'], $data['update_upload_token']);
         $release->update($data);
+        $this->syncInstallerArtifact($release);
+
+        if ($request->hasFile('update_package') || $request->filled('update_upload_token')) {
+            $this->replaceUpdaterArtifact($request, $release, $project, $data);
+        }
 
         if ($oldPath && $oldPath !== $release->file_path) {
             $this->storage->delete($oldPath);
         }
 
-        return redirect()->route('admin.releases.index')->with('success', 'Application release updated.');
+        return redirect()->route('admin.releases.index')->with('success', 'Application release and distribution artifacts updated.');
     }
 
     public function toggle(Release $release)
@@ -110,10 +125,15 @@ class AdminReleaseController extends Controller
     {
         abort_if($release->project?->slug === 'novaos', 404);
 
-        $this->storage->delete($release->file_path);
+        foreach ($release->artifacts as $artifact) {
+            $this->storage->delete($artifact->file_path);
+        }
+        if ($release->file_path) {
+            $this->storage->delete($release->file_path);
+        }
         $release->delete();
 
-        return back()->with('success', 'Release and its external package were deleted.');
+        return back()->with('success', 'Release and all external distribution artifacts were deleted.');
     }
 
     private function packageFromRequest(Request $request, SoftwareProject $project, array $metadata, bool $required): array
@@ -137,6 +157,52 @@ class AdminReleaseController extends Controller
         return [];
     }
 
+    private function syncInstallerArtifact(Release $release): void
+    {
+        if (!$release->file_path || !$release->file_name) return;
+
+        $artifact = $release->artifacts()->where('purpose', 'INSTALLER')->first();
+        $values = [
+            'purpose' => 'INSTALLER',
+            'package_type' => strtolower(pathinfo($release->file_name, PATHINFO_EXTENSION)) ?: null,
+            'file_path' => $release->file_path,
+            'file_name' => $release->file_name,
+            'file_size' => (int) ($release->file_size ?? 0),
+            'sha256' => $release->sha256,
+            'is_primary' => true,
+        ];
+        if ($artifact) $artifact->update($values);
+        else $release->artifacts()->create($values);
+    }
+
+    private function storeOptionalUpdaterArtifact(Request $request, Release $release, SoftwareProject $project, array $metadata): void
+    {
+        if (!$request->hasFile('update_package') && !$request->filled('update_upload_token')) return;
+
+        try {
+            $artifact = $request->filled('update_upload_token')
+                ? $this->storage->consumeUploadTokenToArtifact((string) $request->input('update_upload_token'), $project, $metadata, 'UPDATER')
+                : $this->storage->storeArtifactUploadedFile($request->file('update_package'), $project, $metadata, 'UPDATER');
+        } catch (Throwable $e) {
+            throw ValidationException::withMessages(['update_package' => $e->getMessage()]);
+        }
+
+        $release->artifacts()->updateOrCreate(
+            ['purpose' => 'UPDATER'],
+            array_merge($artifact, ['purpose' => 'UPDATER', 'is_primary' => false])
+        );
+    }
+
+    private function replaceUpdaterArtifact(Request $request, Release $release, SoftwareProject $project, array $metadata): void
+    {
+        $old = $release->artifacts()->where('purpose', 'UPDATER')->first();
+        $this->storeOptionalUpdaterArtifact($request, $release, $project, $metadata);
+        if ($old) {
+            $fresh = $release->artifacts()->where('purpose', 'UPDATER')->first();
+            if ($fresh && $old->file_path !== $fresh->file_path) $this->storage->delete($old->file_path);
+        }
+    }
+
     private function validated(Request $request, ?Release $release = null, bool $requireFile = true): array
     {
         $rules = [
@@ -150,6 +216,8 @@ class AdminReleaseController extends Controller
             'notes' => ['nullable', 'string', 'max:10000'],
             'package' => ['nullable', 'file', 'max:8388608'],
             'upload_token' => ['nullable', 'string', 'regex:/^[A-Za-z0-9_-]{20,100}$/'],
+            'update_package' => ['nullable', 'file', 'max:8388608'],
+            'update_upload_token' => ['nullable', 'string', 'regex:/^[A-Za-z0-9_-]{20,100}$/'],
         ];
 
         if ($requireFile) {
