@@ -5,7 +5,7 @@
 <title>{{ $title ?? config('app.name', 'RozeHub') }}</title>
 <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/rozehub-icon.png') }}">
 <link rel="apple-touch-icon" href="{{ asset('images/rozehub-icon.png') }}">
-<link rel="stylesheet" href="{{ asset('css/rozehub.css') }}?v=20260828-professional-logo-2">
+<link rel="stylesheet" href="{{ asset('css/rozehub.css') }}?v=20260828-novaos-selection-1">
 @livewireStyles
 </head>
 <body>{{ $slot }}@livewireScripts</body>

@@ -24,7 +24,54 @@ class Hub extends Component
     public function selectProject(int $projectId): void
     {
         $this->selectedProjectId = $projectId;
+
+        $project = SoftwareProject::find($projectId);
+        if ($this->isNovaosProject($project)) {
+            // NOVAOS is a first-class operating-system project, not one of the
+            // six application/developer-tool entries. Keep the catalog filter
+            // and the selected detail view in sync when it is chosen.
+            $this->platform = 'NOVAOS';
+        }
+
         $this->resetValidation();
+    }
+
+    public function setPlatform(string $platform): void
+    {
+        $allowed = ['All platforms', 'Windows', 'macOS', 'Linux', 'NOVAOS'];
+        if (!in_array($platform, $allowed, true)) {
+            return;
+        }
+
+        $this->platform = $platform;
+        $this->resetValidation();
+
+        if ($platform === 'NOVAOS') {
+            // Selecting NOVAOS must also select NOVAOS itself. This prevents
+            // the previous project's release panel from remaining visible.
+            $this->selectedProjectId = SoftwareProject::query()
+                ->where(function (Builder $query) {
+                    $query->whereIn('slug', ['novaos', 'roze-os'])
+                        ->orWhereIn('name', ['NOVAOS', 'Roze OS']);
+                })
+                ->value('id');
+            return;
+        }
+
+        // Moving back to the application catalog should never leave NOVAOS
+        // selected. Pick a matching application so its detail panel follows
+        // the active platform filter.
+        $query = SoftwareProject::query()
+            ->whereNotIn('slug', ['novaos', 'roze-os'])
+            ->whereNotIn('name', ['NOVAOS', 'Roze OS']);
+
+        if ($platform !== 'All platforms') {
+            $query->whereHas('releases', fn (Builder $release) => $release
+                ->where('platform', $platform)
+                ->where('is_published', true));
+        }
+
+        $this->selectedProjectId = $query->orderBy('name')->value('id');
     }
 
 
@@ -41,6 +88,7 @@ class Hub extends Component
             'stratosdb' => 'stratosdb.png',
             'lumina' => 'lumina.png',
             'roze-language' => 'roze.png',
+            'novaos' => 'novaos.png',
             'roze-os' => 'novaos.png',
             'trackline' => 'trackeye.png',
         ][$slug] ?? null;

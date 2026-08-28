@@ -60,7 +60,7 @@
                 <label class="search"><span>⌕</span><input wire:model.live.debounce.250ms="search" placeholder="Search software, category, capability"></label>
                 <div class="platforms">
                     @foreach(['All platforms', 'Windows', 'macOS', 'Linux', 'NOVAOS'] as $item)
-                        <button wire:click="$set('platform', '{{ $item }}')" class="{{ $platform === $item ? 'selected' : '' }}">{{ $item }}</button>
+                        <button wire:click="setPlatform('{{ $item }}')" class="{{ $platform === $item ? 'selected' : '' }}">{{ $item }}</button>
                     @endforeach
                 </div>
             </div>
@@ -126,7 +126,12 @@
 
                         <div class="novaos-catalog-actions">
                             <a class="button primary" href="#releases" wire:click="selectProject({{ $novaos->id }})">Explore NOVAOS <span>→</span></a>
-                            <span class="novaos-platform-note"><b>◈</b> NOVAOS builds are never grouped under Windows, macOS or Linux.</span>
+                            @if($novaos->github_url)
+                                <a class="github-button" href="{{ $novaos->github_url }}" target="_blank" rel="noopener noreferrer">
+                                    <span aria-hidden="true">◈</span> View source &amp; contribute on GitHub <span aria-hidden="true">↗</span>
+                                </a>
+                            @endif
+                            <span class="novaos-platform-note"><b>◈</b> NOVAOS is an independent operating system and is never grouped under Windows, macOS or Linux.</span>
                         </div>
                     </div>
 
@@ -158,7 +163,14 @@
                                 <p>NOVAOS is distributed as its own operating-system builds. It does not belong under Windows, macOS, or Linux.</p>
                             </div>
                         </div>
-                        <span class="novaos-badge">Independent OS</span>
+                        <div class="novaos-heading-actions">
+                            <span class="novaos-badge">Independent OS</span>
+                            @if($selected->github_url)
+                                <a class="github-button" href="{{ $selected->github_url }}" target="_blank" rel="noopener noreferrer">
+                                    <span aria-hidden="true">◈</span> GitHub <span aria-hidden="true">↗</span>
+                                </a>
+                            @endif
+                        </div>
                     </div>
 
                     <div class="novaos-release-shell">

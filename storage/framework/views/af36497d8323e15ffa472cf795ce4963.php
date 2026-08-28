@@ -60,7 +60,7 @@
                 <label class="search"><span>⌕</span><input wire:model.live.debounce.250ms="search" placeholder="Search software, category, capability"></label>
                 <div class="platforms">
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = ['All platforms', 'Windows', 'macOS', 'Linux', 'NOVAOS']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
-                        <button wire:click="$set('platform', '<?php echo e($item); ?>')" class="<?php echo e($platform === $item ? 'selected' : ''); ?>"><?php echo e($item); ?></button>
+                        <button wire:click="setPlatform('<?php echo e($item); ?>')" class="<?php echo e($platform === $item ? 'selected' : ''); ?>"><?php echo e($item); ?></button>
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                 </div>
             </div>
@@ -126,7 +126,12 @@
 
                         <div class="novaos-catalog-actions">
                             <a class="button primary" href="#releases" wire:click="selectProject(<?php echo e($novaos->id); ?>)">Explore NOVAOS <span>→</span></a>
-                            <span class="novaos-platform-note"><b>◈</b> NOVAOS builds are never grouped under Windows, macOS or Linux.</span>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($novaos->github_url): ?>
+                                <a class="github-button" href="<?php echo e($novaos->github_url); ?>" target="_blank" rel="noopener noreferrer">
+                                    <span aria-hidden="true">◈</span> View source &amp; contribute on GitHub <span aria-hidden="true">↗</span>
+                                </a>
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            <span class="novaos-platform-note"><b>◈</b> NOVAOS is an independent operating system and is never grouped under Windows, macOS or Linux.</span>
                         </div>
                     </div>
 
@@ -158,7 +163,14 @@
                                 <p>NOVAOS is distributed as its own operating-system builds. It does not belong under Windows, macOS, or Linux.</p>
                             </div>
                         </div>
-                        <span class="novaos-badge">Independent OS</span>
+                        <div class="novaos-heading-actions">
+                            <span class="novaos-badge">Independent OS</span>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($selected->github_url): ?>
+                                <a class="github-button" href="<?php echo e($selected->github_url); ?>" target="_blank" rel="noopener noreferrer">
+                                    <span aria-hidden="true">◈</span> GitHub <span aria-hidden="true">↗</span>
+                                </a>
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        </div>
                     </div>
 
                     <div class="novaos-release-shell">
@@ -251,4 +263,4 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
         </section>
         <footer class="site-footer"><a class="brand" href="#"><span class="brand-logo"><img src="<?php echo e(asset('images/rozehub-ecosystem.png').'?v=20260828-professional-logo-2'); ?>" alt="RozeHub"></span><span>RozeHub</span></a><p>Software made with intent. Built by Firoze.</p><a href="<?php echo e(route('admin.login')); ?>">Admin login →</a></footer>
 </main>
-<?php /**PATH /home/firoze/Downloads/RozeHub-latest-documentation-ecosystem-update-fixed/rozehub_work/resources/views/livewire/hub.blade.php ENDPATH**/ ?>
+<?php /**PATH /home/firoze/Downloads/RozeHub-NOVAOS-public-section-fixed/rozehub_work/resources/views/livewire/hub.blade.php ENDPATH**/ ?>

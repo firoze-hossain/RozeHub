@@ -243,36 +243,34 @@ MD
             $sectionOrder = 0;
             foreach ($sections as $sectionTitle => $sectionData) {
                 $sectionSlug = Str::slug($sectionTitle);
-                $existingSection = DB::table('documentation_sections')
+                // Seed documentation idempotently. The section identity is the
+                // project + slug pair, which is protected by a unique index.
+                // updateOrInsert keeps `php artisan db:seed` safe on an existing
+                // installation instead of attempting a duplicate insert.
+                $sortOrder = $sectionOrder++;
+                $sectionDataRow = [
+                    'title' => $sectionTitle,
+                    'description' => $sectionData['description'] ?? null,
+                    'icon' => $sectionData['icon'] ?? '◈',
+                    'sort_order' => $sortOrder,
+                    'is_published' => true,
+                    'updated_at' => now(),
+                ];
+
+                DB::table('documentation_sections')->updateOrInsert(
+                    [
+                        'software_project_id' => $projectId,
+                        'slug' => $sectionSlug,
+                    ],
+                    array_merge($sectionDataRow, [
+                        'created_at' => now(),
+                    ])
+                );
+
+                $sectionId = DB::table('documentation_sections')
                     ->where('software_project_id', $projectId)
                     ->where('slug', $sectionSlug)
-                    ->first();
-
-                if ($existingSection) {
-                    $sectionId = $existingSection->id;
-                    DB::table('documentation_sections')
-                        ->where('id', $sectionId)
-                        ->update([
-                            'title' => $sectionTitle,
-                            'description' => $sectionData['description'] ?? null,
-                            'icon' => $sectionData['icon'] ?? '◈',
-                            'sort_order' => $sectionOrder++,
-                            'is_published' => true,
-                            'updated_at' => now(),
-                        ]);
-                } else {
-                    $sectionId = DB::table('documentation_sections')->insertGetId([
-                        'software_project_id' => $projectId,
-                        'title' => $sectionTitle,
-                        'slug' => $sectionSlug,
-                        'description' => $sectionData['description'] ?? null,
-                        'icon' => $sectionData['icon'] ?? '◈',
-                        'sort_order' => $sectionOrder++,
-                        'is_published' => true,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
+                    ->value('id');
                 $pageOrder = 0;
                 foreach ($sectionData['pages'] as $page) {
                     $pageSlug = Str::slug($page['title']);
@@ -612,26 +610,31 @@ MD
 
             foreach ($sections as $sectionTitle => $sectionData) {
                 $sectionSlug = Str::slug($sectionTitle);
-                $section = DB::table('documentation_sections')
+                $sortOrder = (int) DB::table('documentation_sections')
                     ->where('software_project_id', $projectId)
-                    ->where('slug', $sectionSlug)
-                    ->first();
+                    ->where('slug', '!=', $sectionSlug)
+                    ->max('sort_order') + 10;
 
-                if (!$section) {
-                    $sectionId = DB::table('documentation_sections')->insertGetId([
+                DB::table('documentation_sections')->updateOrInsert(
+                    [
                         'software_project_id' => $projectId,
-                        'title' => $sectionTitle,
                         'slug' => $sectionSlug,
+                    ],
+                    [
+                        'title' => $sectionTitle,
                         'description' => $sectionData['description'] ?? null,
                         'icon' => $sectionData['icon'] ?? '◈',
-                        'sort_order' => (int) DB::table('documentation_sections')->where('software_project_id', $projectId)->max('sort_order') + 10,
+                        'sort_order' => $sortOrder,
                         'is_published' => true,
-                        'created_at' => now(),
                         'updated_at' => now(),
-                    ]);
-                } else {
-                    $sectionId = $section->id;
-                }
+                        'created_at' => now(),
+                    ]
+                );
+
+                $sectionId = DB::table('documentation_sections')
+                    ->where('software_project_id', $projectId)
+                    ->where('slug', $sectionSlug)
+                    ->value('id');
 
                 foreach ($sectionData['pages'] as $page) {
                     $pageSlug = Str::slug($page['title']);

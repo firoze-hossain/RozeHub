@@ -5,10 +5,10 @@
 <title><?php echo e($title ?? config('app.name', 'RozeHub')); ?></title>
 <link rel="icon" type="image/png" sizes="32x32" href="<?php echo e(asset('images/rozehub-icon.png')); ?>">
 <link rel="apple-touch-icon" href="<?php echo e(asset('images/rozehub-icon.png')); ?>">
-<link rel="stylesheet" href="<?php echo e(asset('css/rozehub.css')); ?>?v=20260828-professional-logo-2">
+<link rel="stylesheet" href="<?php echo e(asset('css/rozehub.css')); ?>?v=20260828-novaos-selection-1">
 <?php echo \Livewire\Mechanisms\FrontendAssets\FrontendAssets::styles(); ?>
 
 </head>
 <body><?php echo e($slot); ?><?php echo \Livewire\Mechanisms\FrontendAssets\FrontendAssets::scripts(); ?></body>
 </html>
-<?php /**PATH /home/firoze/Downloads/RozeHub-latest-documentation-ecosystem-update-fixed/rozehub_work/resources/views/components/layouts/app.blade.php ENDPATH**/ ?>
+<?php /**PATH /home/firoze/projects/Others/RozeHub/resources/views/components/layouts/app.blade.php ENDPATH**/ ?>
