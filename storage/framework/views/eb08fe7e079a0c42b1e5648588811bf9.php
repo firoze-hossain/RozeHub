@@ -1,6 +1,6 @@
 <main class="shell">
         <header class="topbar">
-            <a class="brand" href="<?php echo e(route('hub')); ?>"><span class="brand-logo"><img src="<?php echo e(asset('images/rozehub-ecosystem.png')); ?>" alt="RozeHub"></span><span>RozeHub</span></a>
+            <a class="brand" href="<?php echo e(route('hub')); ?>"><span class="brand-logo"><img src="<?php echo e(asset('images/rozehub-ecosystem.png').'?v=20260828-professional-logo-2'); ?>" alt="RozeHub"></span><span>RozeHub</span></a>
             <nav><a class="active" href="#catalog">Explore</a><a href="#releases">Releases</a><a href="<?php echo e(route('docs.index')); ?>">Documentation</a><a href="#community">Community</a></nav>
             <a class="studio-link" href="<?php echo e(route('admin.login')); ?>">Admin login <span>↗</span></a>
         </header>
@@ -15,7 +15,7 @@
             <div class="hero-art ecosystem-art" aria-label="RozeHub product ecosystem">
                 <div class="ecosystem-glow"></div>
                 <div class="ecosystem-visual">
-                    <img class="ecosystem-image" src="<?php echo e(asset('images/rozehub-ecosystem.png')); ?>" alt="RozeHub ecosystem showing Lumina, DBNavigator, Thundercall, TrackEye, Roze, StratosDB and NOVAOS">
+                    <img class="ecosystem-image" src="<?php echo e(asset('images/rozehub-ecosystem.png').'?v=20260828-professional-logo-2'); ?>" alt="RozeHub ecosystem showing Lumina, DBNavigator, Thundercall, TrackEye, Roze, StratosDB and NOVAOS">
 
                     <?php
                         $ecosystemProducts = [
@@ -249,6 +249,6 @@ endif;
 unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?><button class="button primary" type="submit">Publish review <span>→</span></button></form>
             </div>
         </section>
-        <footer class="site-footer"><a class="brand" href="#"><span class="brand-logo"><img src="<?php echo e(asset('images/rozehub-ecosystem.png')); ?>" alt="RozeHub"></span><span>RozeHub</span></a><p>Software made with intent. Built by Firoze.</p><a href="<?php echo e(route('admin.login')); ?>">Admin login →</a></footer>
+        <footer class="site-footer"><a class="brand" href="#"><span class="brand-logo"><img src="<?php echo e(asset('images/rozehub-ecosystem.png').'?v=20260828-professional-logo-2'); ?>" alt="RozeHub"></span><span>RozeHub</span></a><p>Software made with intent. Built by Firoze.</p><a href="<?php echo e(route('admin.login')); ?>">Admin login →</a></footer>
 </main>
 <?php /**PATH /home/firoze/projects/Others/RozeHub/resources/views/livewire/hub.blade.php ENDPATH**/ ?>

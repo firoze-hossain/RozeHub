@@ -5,7 +5,7 @@
 <title><?php echo e($title ?? config('app.name', 'RozeHub')); ?></title>
 <link rel="icon" type="image/png" sizes="32x32" href="<?php echo e(asset('images/rozehub-icon.png')); ?>">
 <link rel="apple-touch-icon" href="<?php echo e(asset('images/rozehub-icon.png')); ?>">
-<link rel="stylesheet" href="<?php echo e(asset('css/rozehub.css')); ?>">
+<link rel="stylesheet" href="<?php echo e(asset('css/rozehub.css')); ?>?v=20260828-professional-logo-2">
 <?php echo \Livewire\Mechanisms\FrontendAssets\FrontendAssets::styles(); ?>
 
 </head>

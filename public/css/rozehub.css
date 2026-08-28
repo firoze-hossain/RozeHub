@@ -11,7 +11,10 @@
 .hero-actions{margin-top:34px}
 .ecosystem-art{height:500px;background:transparent;border:0;overflow:visible;display:grid;place-items:center;position:relative}
 .ecosystem-glow{position:absolute;width:390px;height:390px;border-radius:50%;background:radial-gradient(circle,rgba(91,221,174,.24) 0%,rgba(75,190,151,.10) 42%,rgba(0,0,0,0) 72%);filter:blur(18px);z-index:0}
-.ecosystem-image{position:relative;z-index:1;width:min(100%,520px);height:auto;display:block;filter:drop-shadow(0 24px 34px rgba(16,34,30,.16))}
+/* Keep the main RozeHub ecosystem artwork colorful but more restrained and professional.
+   This affects only the large hero logo/artwork, not the rest of the website. */
+.ecosystem-image{position:relative;z-index:1;width:min(100%,520px);height:auto;display:block;filter:grayscale(.68) saturate(.42) contrast(1.10) brightness(.96) drop-shadow(0 24px 34px rgba(16,34,30,.16));transition:filter .3s ease}
+.ecosystem-image:hover{filter:grayscale(.58) saturate(.48) contrast(1.10) brightness(.98) drop-shadow(0 26px 36px rgba(16,34,30,.18))}
 .pulse{grid-template-columns:repeat(4,1fr);padding:0;border:1px solid var(--line);background:rgba(255,254,249,.6)}
 .pulse div{padding:25px 26px}
 .pulse div+div{border-left:1px solid var(--line);padding-left:26px}

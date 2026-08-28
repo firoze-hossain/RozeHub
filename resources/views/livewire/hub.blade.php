@@ -1,6 +1,6 @@
 <main class="shell">
         <header class="topbar">
-            <a class="brand" href="{{ route('hub') }}"><span class="brand-logo"><img src="{{ asset('images/rozehub-ecosystem.png') }}" alt="RozeHub"></span><span>RozeHub</span></a>
+            <a class="brand" href="{{ route('hub') }}"><span class="brand-logo"><img src="{{ asset('images/rozehub-ecosystem.png').'?v=20260828-professional-logo-2' }}" alt="RozeHub"></span><span>RozeHub</span></a>
             <nav><a class="active" href="#catalog">Explore</a><a href="#releases">Releases</a><a href="{{ route('docs.index') }}">Documentation</a><a href="#community">Community</a></nav>
             <a class="studio-link" href="{{ route('admin.login') }}">Admin login <span>↗</span></a>
         </header>
@@ -15,7 +15,7 @@
             <div class="hero-art ecosystem-art" aria-label="RozeHub product ecosystem">
                 <div class="ecosystem-glow"></div>
                 <div class="ecosystem-visual">
-                    <img class="ecosystem-image" src="{{ asset('images/rozehub-ecosystem.png') }}" alt="RozeHub ecosystem showing Lumina, DBNavigator, Thundercall, TrackEye, Roze, StratosDB and NOVAOS">
+                    <img class="ecosystem-image" src="{{ asset('images/rozehub-ecosystem.png').'?v=20260828-professional-logo-2' }}" alt="RozeHub ecosystem showing Lumina, DBNavigator, Thundercall, TrackEye, Roze, StratosDB and NOVAOS">
 
                     @php
                         $ecosystemProducts = [
@@ -235,5 +235,5 @@
                 <form class="review-form" wire:submit="saveReview"><p class="eyebrow">Leave a review</p><h3>Your release notes, in context.</h3>@if(session('review-sent'))<p class="success">{{ session('review-sent') }}</p>@endif<label>Your name<input wire:model="reviewName" placeholder="Name or handle"></label>@error('reviewName')<small class="error">{{ $message }}</small>@enderror<label>Rating<select wire:model="reviewRating">@for($rating = 5; $rating >= 1; $rating--)<option value="{{ $rating }}">{{ $rating }} stars</option>@endfor</select></label><label>What worked for you?<textarea wire:model="reviewBody" placeholder="Share a useful, specific note..."></textarea></label>@error('reviewBody')<small class="error">{{ $message }}</small>@enderror<button class="button primary" type="submit">Publish review <span>→</span></button></form>
             </div>
         </section>
-        <footer class="site-footer"><a class="brand" href="#"><span class="brand-logo"><img src="{{ asset('images/rozehub-ecosystem.png') }}" alt="RozeHub"></span><span>RozeHub</span></a><p>Software made with intent. Built by Firoze.</p><a href="{{ route('admin.login') }}">Admin login →</a></footer>
+        <footer class="site-footer"><a class="brand" href="#"><span class="brand-logo"><img src="{{ asset('images/rozehub-ecosystem.png').'?v=20260828-professional-logo-2' }}" alt="RozeHub"></span><span>RozeHub</span></a><p>Software made with intent. Built by Firoze.</p><a href="{{ route('admin.login') }}">Admin login →</a></footer>
 </main>

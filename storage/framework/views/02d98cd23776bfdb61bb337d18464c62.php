@@ -14,4 +14,4 @@
             $__env->endSlot();
         }
         ?>
-    <?php echo $__env->renderComponent(); ?><?php /**PATH /home/firoze/Documents/RozeHub-github-contributions-integrated-fixed/storage/framework/views/4943bc92ebba41e8b0e508149542e0ad.blade.php ENDPATH**/ ?>
+    <?php echo $__env->renderComponent(); ?><?php /**PATH /home/firoze/Documents/RozeHub-github-contributions-logo-professional-v2/storage/framework/views/4943bc92ebba41e8b0e508149542e0ad.blade.php ENDPATH**/ ?>
