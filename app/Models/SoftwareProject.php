@@ -10,7 +10,7 @@ class SoftwareProject extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'slug', 'tagline', 'description', 'category', 'accent', 'icon', 'website'];
+    protected $fillable = ['name', 'slug', 'tagline', 'description', 'category', 'accent', 'icon', 'website', 'github_url'];
 
     public function releases(): HasMany
     {

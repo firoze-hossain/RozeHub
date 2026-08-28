@@ -32,4 +32,4 @@
         </div>
     </body>
 </html>
-<?php /**PATH /home/firoze/Downloads/RozeHub-release-artifacts-v1/RozeHub-final/vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/views/minimal.blade.php ENDPATH**/ ?>
+<?php /**PATH /home/firoze/Documents/RozeHub-github-contributions-integrated-fixed/vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/views/minimal.blade.php ENDPATH**/ ?>

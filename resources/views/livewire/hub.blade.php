@@ -204,7 +204,22 @@
                 </section>
             @else
                 <section id="releases" class="detail-section">
-                    <div class="detail-intro"><span class="project-icon large accent-{{ $selected->accent }}">{{ $selected->icon }}</span><div><p class="eyebrow">Selected project</p><h2>{{ $selected->name }}</h2><p>{{ $selected->description }}</p></div></div>
+                    <div class="detail-intro">
+    <span class="project-icon large accent-{{ $selected->accent }}">{{ $selected->icon }}</span>
+    <div class="detail-project-copy">
+        <p class="eyebrow">Selected project</p>
+        <h2>{{ $selected->name }}</h2>
+        <p>{{ $selected->description }}</p>
+        @if($selected->github_url)
+            <div class="project-source-actions">
+                <a class="github-button" href="{{ $selected->github_url }}" target="_blank" rel="noopener noreferrer">
+                    <span aria-hidden="true">◈</span> View source &amp; contribute on GitHub <span aria-hidden="true">↗</span>
+                </a>
+                <span class="source-note">Open source · Issues &amp; pull requests welcome</span>
+            </div>
+        @endif
+    </div>
+</div>
                     <div class="detail-layout"><div class="release-panel"><div class="panel-title"><h3>Available downloads</h3><span>{{ $selected->releases->count() }} builds</span></div>
                         @forelse($selected->releases as $release)
                             <div class="release-row"><div class="os-icon">{{ $release->platform === 'Windows' ? '⊞' : ($release->platform === 'macOS' ? '◉' : '◈') }}</div><div><strong>{{ $release->platform }} · {{ $release->architecture }}</strong><p>v{{ $release->version }} · {{ $release->channel }} · {{ $release->published_at?->format('M j, Y') }}</p></div><div class="release-count">{{ number_format($release->downloads_count) }}<small>downloads</small></div><a class="download-button" href="{{ route('releases.download', $release) }}" title="Download {{ $release->file_name }}">↓</a></div>

@@ -203,3 +203,10 @@
 @media(max-width:1000px){.docs-version-picker{min-width:160px}.docs-version-picker select{min-width:160px}.docs-version-banner{align-items:flex-start;flex-direction:column}.docs-version-banner-meta{padding-left:0;border-left:0;padding-top:8px;border-top:1px solid #d2ded6;width:100%}}
 @media(max-width:700px){.docs-version-picker{margin-bottom:10px}.docs-version-picker select{width:100%}.docs-version-banner{margin-top:18px}.docs-version-banner-meta{white-space:normal}}
 .doc-content u{text-decoration-thickness:2px;text-decoration-color:#1d7455}.doc-content mark{background:#fff0a8;padding:0 2px}.doc-content s{text-decoration-thickness:1px}
+
+/* Open-source project source / contribution action */
+.detail-project-copy { min-width: 0; }
+.project-source-actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:16px; }
+.github-button { display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border:1px solid var(--ink); background:var(--ink); color:#fff; text-decoration:none; font-size:12px; font-weight:700; transition:transform .15s, opacity .15s; }
+.github-button:hover { transform:translateY(-1px); opacity:.92; }
+.source-note { color:var(--muted); font-size:11px; }
