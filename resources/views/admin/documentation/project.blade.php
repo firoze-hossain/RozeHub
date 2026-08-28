@@ -10,9 +10,15 @@
         </div>
     </div>
     <div class="admin-head-actions">
+        @if($project->github_url)<a class="admin-secondary" href="{{ $project->github_url }}" target="_blank" rel="noopener">GitHub ↗</a>@endif
         <a class="admin-secondary" href="{{ route('docs.project',$project) }}">Public docs ↗</a>
         <a class="admin-primary" href="{{ route('admin.documentation.pages.create',$project) }}">+ New page</a>
     </div>
+</div>
+
+<div class="admin-doc-source-strip">
+    <div><span>OPEN SOURCE PROJECT</span><strong>{{ $project->name }} documentation is connected to its source repository.</strong><p>Keep implementation changes, issues, pull requests, and contributor discussion in GitHub while RozeHub remains the public documentation and release hub.</p></div>
+    @if($project->github_url)<a href="{{ $project->github_url }}" target="_blank" rel="noopener">Open repository ↗</a>@endif
 </div>
 
 <div class="admin-doc-release-strip">

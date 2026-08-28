@@ -13,7 +13,7 @@
 <div class="docs-project-card-top"><span class="docs-project-icon accent-{{ $project->accent }}">{{ $project->icon }}</span><span>{{ $project->category }}</span></div>
 <h3>{{ $project->name }}</h3><p>{{ $project->tagline }}</p>
 <div class="docs-project-meta"><span>{{ $project->published_docs_count }} published pages</span><span>{{ $project->documentationSections->count() }} sections</span><span>{{ optional($project->releases->first())->version ? 'v'.optional($project->releases->first())->version : 'docs current' }}</span></div>
-<div class="docs-card-actions"><a href="{{ route('docs.project',$project) }}">Open docs <span>→</span></a><a class="quiet" href="{{ route('docs.print',$project) }}">Print / PDF</a></div>
+<div class="docs-card-actions"><a href="{{ route('docs.project',$project) }}">Open docs <span>→</span></a>@if($project->github_url)<a class="quiet" href="{{ $project->github_url }}" target="_blank" rel="noopener">GitHub ↗</a>@else<a class="quiet" href="{{ route('docs.print',$project) }}">Print / PDF</a>@endif</div>
 </article>
 @endforeach
 </div></section>

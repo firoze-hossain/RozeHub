@@ -213,3 +213,14 @@
 .github-button { display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border:1px solid var(--ink); background:var(--ink); color:#fff; text-decoration:none; font-size:12px; font-weight:700; transition:transform .15s, opacity .15s; }
 .github-button:hover { transform:translateY(-1px); opacity:.92; }
 .source-note { color:var(--muted); font-size:11px; }
+
+/* RozeHub developer documentation: open-source identity and project context */
+.docs-github-link{border:1px solid #18372e!important;background:#18372e!important;color:#fff!important;padding:10px 13px!important;font-weight:800!important;text-decoration:none!important}
+.docs-github-link:hover{background:#245246!important}
+.docs-open-source-bar{display:flex;align-items:center;justify-content:space-between;gap:24px;border:1px solid #cfded5;background:#eef5f0;padding:18px 20px;margin:25px 0 10px}
+.docs-open-source-bar span{display:block;font-size:7px;letter-spacing:1.5px;color:#507468;font-weight:900}
+.docs-open-source-bar strong{display:block;margin-top:5px;font-size:15px;color:#17372d}
+.docs-open-source-bar p{margin:5px 0 0;font-size:10px;color:#697a72;line-height:1.5}
+.docs-open-source-bar a{flex:none;border:1px solid #18372e;background:#18372e;color:#fff;padding:10px 14px;text-decoration:none;font-size:10px;font-weight:800}
+.docs-open-source-bar a:hover{background:#245246}
+@media(max-width:700px){.docs-open-source-bar{display:block}.docs-open-source-bar a{display:inline-block;margin-top:13px}}

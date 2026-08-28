@@ -146,3 +146,29 @@ DBNavigator / Lumina / Roze / StratosDB / TrackEye
 ```
 
 The running desktop application should not overwrite its own executable. Use a small updater/launcher process to perform installation and restart, matching the desktop auto-update architecture in `Desktop Auto Update Strategy.pdf`.
+
+## Documentation ecosystem update — 28 Aug 2026
+
+This version upgrades RozeHub's documentation for the seven-project open-source ecosystem.
+
+### Included
+
+- Project-specific **Use Cases** documentation for all seven projects.
+- Project-specific **Contributing** documentation for all seven projects.
+- TrackEye naming normalized from the legacy `Trackline` identity.
+- GitHub repository actions surfaced in public documentation and the admin documentation workspace.
+- Open-source project banner on each project's documentation home.
+- Idempotent documentation seeding so `php artisan db:seed` can be safely rerun on an existing installation.
+- TrackEye privacy and responsible-monitoring documentation.
+
+### Upgrade
+
+Run:
+
+```bash
+php artisan migrate
+php artisan db:seed
+php artisan optimize:clear
+```
+
+The documentation seeder no longer exits merely because documentation already exists; it preserves existing pages and adds missing ecosystem documentation without duplicating the new sections/pages.

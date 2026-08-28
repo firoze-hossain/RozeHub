@@ -10,10 +10,6 @@ class DocumentationSeeder extends Seeder
 {
     public function run(): void
     {
-        if (DB::table('documentation_sections')->exists()) {
-            return;
-        }
-
         $projects = DB::table('software_projects')->pluck('id', 'slug');
 
         $docs = [
@@ -232,7 +228,7 @@ MD
                     ['title'=>'Debugging and terminal','kind'=>'guide','summary'=>'Run commands and inspect application state while developing.','content'=>"# Debugging and terminal\n\nUse the integrated terminal for repeatable project commands and the debugger for controlled inspection of program state."],
                 ]]
             ],
-            'trackline'=>[
+            'trackeye'=>[
                 'Overview'=>['description'=>'Responsible activity visibility and reporting.','icon'=>'◌','pages'=>[
                     ['title'=>'TrackEye overview','kind'=>'overview','summary'=>'Understand the activity tracker and its reporting model.','content'=>"# TrackEye overview\n\nTrackEye provides workplace activity visibility with an emphasis on clear reporting and configurable capture behavior.\n\nUse it transparently, with appropriate organizational policies and user notice."],
                     ['title'=>'Configuration and monitoring','kind'=>'guide','summary'=>'Configure tracking behavior, retention, and reporting.','content'=>"# Configuration and monitoring\n\nChoose only the telemetry required for the intended operational purpose. Define retention and access rules before enabling collection."],
@@ -247,29 +243,416 @@ MD
             $sectionOrder = 0;
             foreach ($sections as $sectionTitle => $sectionData) {
                 $sectionSlug = Str::slug($sectionTitle);
-                $sectionId = DB::table('documentation_sections')->insertGetId([
-                    'software_project_id' => $projectId,
-                    'title' => $sectionTitle,
-                    'slug' => $sectionSlug,
-                    'description' => $sectionData['description'] ?? null,
-                    'icon' => $sectionData['icon'] ?? '◈',
-                    'sort_order' => $sectionOrder++,
-                    'is_published' => true,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+                $existingSection = DB::table('documentation_sections')
+                    ->where('software_project_id', $projectId)
+                    ->where('slug', $sectionSlug)
+                    ->first();
+
+                if ($existingSection) {
+                    $sectionId = $existingSection->id;
+                    DB::table('documentation_sections')
+                        ->where('id', $sectionId)
+                        ->update([
+                            'title' => $sectionTitle,
+                            'description' => $sectionData['description'] ?? null,
+                            'icon' => $sectionData['icon'] ?? '◈',
+                            'sort_order' => $sectionOrder++,
+                            'is_published' => true,
+                            'updated_at' => now(),
+                        ]);
+                } else {
+                    $sectionId = DB::table('documentation_sections')->insertGetId([
+                        'software_project_id' => $projectId,
+                        'title' => $sectionTitle,
+                        'slug' => $sectionSlug,
+                        'description' => $sectionData['description'] ?? null,
+                        'icon' => $sectionData['icon'] ?? '◈',
+                        'sort_order' => $sectionOrder++,
+                        'is_published' => true,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
                 $pageOrder = 0;
                 foreach ($sectionData['pages'] as $page) {
-                    DB::table('documentation_pages')->insert([
-                        'software_project_id' => $projectId,
+                    $pageSlug = Str::slug($page['title']);
+                    $existingPage = DB::table('documentation_pages')
+                        ->where('software_project_id', $projectId)
+                        ->whereNull('release_id')
+                        ->where('slug', $pageSlug)
+                        ->first();
+
+                    $pageData = [
                         'documentation_section_id' => $sectionId,
                         'title' => $page['title'],
-                        'slug' => Str::slug($page['title']),
                         'kind' => $page['kind'] ?? 'guide',
                         'version' => 'Current',
                         'summary' => $page['summary'] ?? null,
                         'content' => $page['content'],
                         'sort_order' => $pageOrder++,
+                        'is_published' => true,
+                        'updated_at' => now(),
+                    ];
+
+                    if ($existingPage) {
+                        DB::table('documentation_pages')
+                            ->where('id', $existingPage->id)
+                            ->update($pageData);
+                    } else {
+                        DB::table('documentation_pages')->insert(array_merge([
+                            'software_project_id' => $projectId,
+                            'release_id' => null,
+                            'slug' => $pageSlug,
+                            'created_at' => now(),
+                        ], $pageData));
+                    }
+                }
+            }
+        }
+
+        // Product-wide documentation enhancements. These are intentionally
+        // idempotent so `php artisan db:seed` can safely be run on an existing
+        // RozeHub installation without duplicating sections or pages.
+        $enhancements = [
+            'dbnavigator' => [
+                'Use Cases' => ['description' => 'Practical database workflows where DBNavigator is useful.', 'icon' => '◎', 'pages' => [
+                    ['title' => 'Database development workflows', 'kind' => 'tutorial', 'summary' => 'Use DBNavigator for schema exploration, SQL development, and data inspection.', 'content' => <<<'MD'
+# Database development workflows
+
+DBNavigator is useful anywhere a developer needs a focused database workspace.
+
+## Common use cases
+
+- Explore an unfamiliar schema before changing application code.
+- Develop and verify SQL queries against development databases.
+- Inspect relationships, indexes, and table structure.
+- Troubleshoot data issues without switching between multiple tools.
+- Validate migration results after a deployment.
+
+## A practical workflow
+
+```text
+connect → inspect → query → verify → document
+```
+
+Keep production credentials restricted and use the least privilege required for the task.
+MD
+],
+                ]],
+                'Contributing' => ['description' => 'Build DBNavigator, propose changes, and contribute through GitHub.', 'icon' => '⌘', 'pages' => [
+                    ['title' => 'Contributing to DBNavigator', 'kind' => 'development', 'summary' => 'Set up the project locally and submit focused contributions.', 'content' => <<<'MD'
+# Contributing to DBNavigator
+
+DBNavigator is an open-source project. Contributions should be small, reviewable, and focused on improving the database-client experience.
+
+## Suggested flow
+
+1. Fork the GitHub repository.
+2. Create a feature or fix branch.
+3. Build and run the application locally.
+4. Add or update tests where appropriate.
+5. Keep commits focused and descriptive.
+6. Open a pull request with a clear problem statement and verification steps.
+
+See the project's GitHub repository for the current build instructions and contribution discussions.
+MD
+],
+                ]],
+            ],
+            'thundercall' => [
+                'Use Cases' => ['description' => 'API development and testing workflows for ThunderCall.', 'icon' => '◎', 'pages' => [
+                    ['title' => 'API development workflows', 'kind' => 'tutorial', 'summary' => 'Use ThunderCall to build, validate, document, and troubleshoot HTTP APIs.', 'content' => <<<'MD'
+# API development workflows
+
+ThunderCall fits naturally into API development from the first endpoint to regression testing.
+
+## Common use cases
+
+- Explore a new REST endpoint.
+- Validate authentication and authorization behavior.
+- Reproduce a production API issue safely in a test environment.
+- Build reusable request collections for a team.
+- Compare responses across environments.
+
+Never place production secrets directly into shared collections.
+MD
+],
+                ]],
+                'Contributing' => ['description' => 'Contribute features, fixes, documentation, and test improvements.', 'icon' => '⌘', 'pages' => [
+                    ['title' => 'Contributing to ThunderCall', 'kind' => 'development', 'summary' => 'A practical contribution workflow for the open-source API client.', 'content' => <<<'MD'
+# Contributing to ThunderCall
+
+Start by reading the repository README and existing issues before implementing a change.
+
+## Contribution checklist
+
+- Reproduce the problem when fixing a bug.
+- Keep UI changes consistent with the existing design language.
+- Add regression coverage where practical.
+- Document new request, environment, or collection behavior.
+- Explain compatibility impact in the pull request.
+MD
+],
+                ]],
+            ],
+            'lumina' => [
+                'Use Cases' => ['description' => 'Developer workflows supported by the Lumina workspace.', 'icon' => '◎', 'pages' => [
+                    ['title' => 'Development workflows', 'kind' => 'tutorial', 'summary' => 'Use Lumina as a focused workspace for application and language development.', 'content' => <<<'MD'
+# Development workflows
+
+Lumina brings project navigation, editing, terminal work, and debugging into one workspace.
+
+## Common use cases
+
+- Work on multi-module applications.
+- Develop Roze programs alongside language tooling.
+- Run build and test commands from the integrated terminal.
+- Debug a local application without leaving the project workspace.
+- Explore unfamiliar repositories through structured navigation.
+MD
+],
+                ]],
+                'Contributing' => ['description' => 'Extend the IDE and improve the developer experience.', 'icon' => '⌘', 'pages' => [
+                    ['title' => 'Contributing to Lumina', 'kind' => 'development', 'summary' => 'Guidance for contributors working on the IDE.', 'content' => <<<'MD'
+# Contributing to Lumina
+
+Prefer focused pull requests that improve one part of the developer workflow.
+
+Before opening a pull request, verify the application starts cleanly, existing functionality still works, and UI changes remain consistent across supported platforms.
+MD
+],
+                ]],
+            ],
+            'roze-language' => [
+                'Use Cases' => ['description' => 'Where the Roze language is intended to be useful.', 'icon' => '◎', 'pages' => [
+                    ['title' => 'Language use cases', 'kind' => 'tutorial', 'summary' => 'Explore the kinds of software Roze is intended to make understandable.', 'content' => <<<'MD'
+# Language use cases
+
+Roze is designed around understandable systems software and explicit developer intent.
+
+## Potential use cases
+
+- Command-line tools.
+- Developer utilities.
+- Systems-oriented applications.
+- Educational experiments in compiler and language design.
+- Tools that benefit from a small, explicit language runtime.
+
+The language is evolving, so always check the version-specific reference before relying on experimental features.
+MD
+],
+                ]],
+                'Contributing' => ['description' => 'Help evolve the compiler, language tooling, and standard library.', 'icon' => '⌘', 'pages' => [
+                    ['title' => 'Contributing to Roze', 'kind' => 'development', 'summary' => 'A contribution model for language, compiler, and documentation work.', 'content' => <<<'MD'
+# Contributing to Roze
+
+Language changes should explain the problem they solve and the effect on existing programs.
+
+## Good contribution areas
+
+- Compiler diagnostics.
+- Parser and semantic analysis.
+- Runtime and standard library improvements.
+- Documentation and examples.
+- Build and developer tooling.
+
+For syntax or semantic changes, include examples showing both valid and invalid programs.
+MD
+],
+                ]],
+            ],
+            'stratosdb' => [
+                'Use Cases' => ['description' => 'Developer-first database-engine use cases for StratosDB.', 'icon' => '◎', 'pages' => [
+                    ['title' => 'Database engine use cases', 'kind' => 'tutorial', 'summary' => 'Understand where an experimental database engine can fit.', 'content' => <<<'MD'
+# Database engine use cases
+
+StratosDB is intended as a developer-first database engine experiment.
+
+## Potential use cases
+
+- Local application data stores.
+- Database-engine experimentation and research.
+- Developer tools that need embedded or controlled storage.
+- Learning about SQL execution, transactions, and storage engines.
+
+Production suitability should always be evaluated against the release maturity and documented compatibility guarantees.
+MD
+],
+                ]],
+                'Contributing' => ['description' => 'Contribute to SQL execution, storage, recovery, tooling, and documentation.', 'icon' => '⌘', 'pages' => [
+                    ['title' => 'Contributing to StratosDB', 'kind' => 'development', 'summary' => 'A contributor workflow for database-engine development.', 'content' => <<<'MD'
+# Contributing to StratosDB
+
+Database-engine changes can affect correctness, durability, and compatibility. Explain those effects clearly in every contribution.
+
+## Useful contribution areas
+
+- SQL parser and planner.
+- Execution engine.
+- Transactions and concurrency.
+- Storage and recovery.
+- CLI and diagnostics.
+- Documentation and compatibility tests.
+
+For storage changes, include recovery and failure-mode reasoning where applicable.
+MD
+],
+                ]],
+            ],
+            'novaos' => [
+                'Use Cases' => ['description' => 'The environments and experiments NOVAOS is designed to support.', 'icon' => '◎', 'pages' => [
+                    ['title' => 'Operating-system use cases', 'kind' => 'tutorial', 'summary' => 'Understand NOVAOS as an independent operating-system project.', 'content' => <<<'MD'
+# Operating-system use cases
+
+NOVAOS is an independent operating-system project in the RozeHub ecosystem.
+
+## Potential use cases
+
+- Personal developer environments.
+- Operating-system research and experimentation.
+- Reproducible system-image experiments.
+- Exploring the boundary between a base OS and application tooling.
+
+NOVAOS is not positioned as a drop-in replacement for every general-purpose operating system workload.
+MD
+],
+                ]],
+                'Contributing' => ['description' => 'Contribute to the OS, build system, tooling, and documentation.', 'icon' => '⌘', 'pages' => [
+                    ['title' => 'Contributing to NOVAOS', 'kind' => 'development', 'summary' => 'How to approach operating-system contributions safely.', 'content' => <<<'MD'
+# Contributing to NOVAOS
+
+System-level changes should be reproducible and include clear hardware and architecture assumptions.
+
+Document the source revision, build environment, architecture, and test procedure for image-related changes.
+MD
+],
+                ]],
+            ],
+            'trackeye' => [
+                'Use Cases' => ['description' => 'Responsible workplace monitoring and operational reporting scenarios.', 'icon' => '◎', 'pages' => [
+                    ['title' => 'Workplace monitoring use cases', 'kind' => 'tutorial', 'summary' => 'Examples of responsible ways to use TrackEye for operational visibility.', 'content' => <<<'MD'
+# Workplace monitoring use cases
+
+TrackEye should be deployed with a clear purpose, appropriate employee notice, and access controls.
+
+## Common use cases
+
+### Remote team visibility
+
+Understand working-session patterns when teams are distributed across locations and time zones.
+
+### Productivity analysis
+
+Use aggregated activity summaries to identify workflow friction and improve processes rather than relying only on raw event volume.
+
+### IT operations
+
+Investigate application usage and workstation activity when troubleshooting operational issues.
+
+### Reporting
+
+Create periodic summaries for managers or operations teams while limiting access to sensitive raw telemetry.
+
+## Responsible deployment
+
+Define what is collected, why it is collected, who can access it, and how long it is retained before enabling monitoring.
+MD
+],
+                ]],
+                'Privacy & Security' => ['description' => 'Privacy-aware deployment, access control, retention, and employee notice.', 'icon' => '◆', 'pages' => [
+                    ['title' => 'Privacy and responsible monitoring', 'kind' => 'operations', 'summary' => 'Principles for deploying TrackEye transparently and responsibly.', 'content' => <<<'MD'
+# Privacy and responsible monitoring
+
+Activity monitoring can expose sensitive information. Configure TrackEye around a documented organizational purpose.
+
+## Before deployment
+
+- Tell affected users what categories of information are collected.
+- Define the purpose of collection.
+- Minimize collection to what is necessary.
+- Restrict access using least privilege.
+- Define retention and deletion rules.
+- Protect exported reports and backups.
+
+## Security
+
+Treat captured screenshots, activity records, and other telemetry as sensitive operational data. Protect storage and transport, rotate credentials, and audit administrative access.
+
+RozeHub documentation describes product behavior; organizations remain responsible for meeting the laws, policies, and agreements applicable to their deployment.
+MD
+],
+                ]],
+                'Contributing' => ['description' => 'Develop TrackEye openly while keeping monitoring behavior clear and reviewable.', 'icon' => '⌘', 'pages' => [
+                    ['title' => 'Contributing to TrackEye', 'kind' => 'development', 'summary' => 'Contribution guidance for the activity-tracking project.', 'content' => <<<'MD'
+# Contributing to TrackEye
+
+TrackEye contributions should prioritize correctness, transparency, security, and responsible data handling.
+
+## Good contribution areas
+
+- Activity collection reliability.
+- Configuration and retention controls.
+- Reporting and aggregation.
+- Cross-platform support.
+- Security improvements.
+- Documentation and deployment tooling.
+
+When changing telemetry behavior, explain what data is collected, when it is collected, where it is stored, and how administrators can control it.
+MD
+],
+                ]],
+            ],
+        ];
+
+        foreach ($enhancements as $slug => $sections) {
+            $projectId = $projects[$slug] ?? null;
+            if (!$projectId) {
+                continue;
+            }
+
+            foreach ($sections as $sectionTitle => $sectionData) {
+                $sectionSlug = Str::slug($sectionTitle);
+                $section = DB::table('documentation_sections')
+                    ->where('software_project_id', $projectId)
+                    ->where('slug', $sectionSlug)
+                    ->first();
+
+                if (!$section) {
+                    $sectionId = DB::table('documentation_sections')->insertGetId([
+                        'software_project_id' => $projectId,
+                        'title' => $sectionTitle,
+                        'slug' => $sectionSlug,
+                        'description' => $sectionData['description'] ?? null,
+                        'icon' => $sectionData['icon'] ?? '◈',
+                        'sort_order' => (int) DB::table('documentation_sections')->where('software_project_id', $projectId)->max('sort_order') + 10,
+                        'is_published' => true,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                } else {
+                    $sectionId = $section->id;
+                }
+
+                foreach ($sectionData['pages'] as $page) {
+                    $pageSlug = Str::slug($page['title']);
+                    $exists = DB::table('documentation_pages')
+                        ->where('software_project_id', $projectId)
+                        ->where('slug', $pageSlug)
+                        ->whereNull('release_id')
+                        ->exists();
+                    if ($exists) {
+                        continue;
+                    }
+                    DB::table('documentation_pages')->insert([
+                        'software_project_id' => $projectId,
+                        'documentation_section_id' => $sectionId,
+                        'title' => $page['title'],
+                        'slug' => $pageSlug,
+                        'kind' => $page['kind'] ?? 'guide',
+                        'version' => 'Current',
+                        'summary' => $page['summary'] ?? null,
+                        'content' => $page['content'],
+                        'sort_order' => (int) DB::table('documentation_pages')->where('documentation_section_id', $sectionId)->max('sort_order') + 1,
                         'is_published' => true,
                         'created_at' => now(),
                         'updated_at' => now(),
