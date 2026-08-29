@@ -33,7 +33,7 @@ class AdminMarketplaceController extends Controller
 
         return view('admin.marketplace.index', [
             'items' => $items,
-            'projects' => SoftwareProject::orderBy('name')->get(),
+            'projects' => SoftwareProject::with('ecosystemProfile')->orderBy('name')->get(),
         ]);
     }
 
@@ -45,7 +45,7 @@ class AdminMarketplaceController extends Controller
                 'is_official' => true,
                 'is_verified' => true,
             ]),
-            'projects' => SoftwareProject::orderBy('name')->get(),
+            'projects' => SoftwareProject::with('ecosystemProfile')->orderBy('name')->get(),
             'mode' => 'create',
         ]);
     }
@@ -53,8 +53,12 @@ class AdminMarketplaceController extends Controller
     public function store(Request $request)
     {
         $data = $this->validatedItem($request);
+        $project = SoftwareProject::with('ecosystemProfile')->findOrFail($data['software_project_id']);
+        abort_unless(in_array($data['item_type'], $project->ecosystemProfile?->item_types ?? [], true), 422, 'Unsupported extension type for the selected project.');
         $data['slug'] = Str::slug($data['slug'] ?: $data['name']);
         $data['permissions'] = $this->permissions($request);
+        $data['capabilities'] = $this->permissions($request->input('capabilities_text'));
+        $data['compatibility'] = ['targets' => $this->permissions($request->input('compatibility_text')), 'minimumProjectVersion' => trim((string)$request->input('minimum_project_version')) ?: null];
         $data['is_published'] = $request->boolean('is_published');
         $data['is_official'] = $request->boolean('is_official');
         $data['is_verified'] = $request->boolean('is_verified');
@@ -68,7 +72,7 @@ class AdminMarketplaceController extends Controller
     {
         return view('admin.marketplace.item-form', [
             'item' => $item,
-            'projects' => SoftwareProject::orderBy('name')->get(),
+            'projects' => SoftwareProject::with('ecosystemProfile')->orderBy('name')->get(),
             'mode' => 'edit',
         ]);
     }
@@ -76,8 +80,12 @@ class AdminMarketplaceController extends Controller
     public function update(Request $request, MarketplaceItem $item)
     {
         $data = $this->validatedItem($request, $item);
+        $project = SoftwareProject::with('ecosystemProfile')->findOrFail($data['software_project_id']);
+        abort_unless(in_array($data['item_type'], $project->ecosystemProfile?->item_types ?? [], true), 422, 'Unsupported extension type for the selected project.');
         $data['slug'] = Str::slug($data['slug'] ?: $data['name']);
         $data['permissions'] = $this->permissions($request);
+        $data['capabilities'] = $this->permissions($request->input('capabilities_text'));
+        $data['compatibility'] = ['targets' => $this->permissions($request->input('compatibility_text')), 'minimumProjectVersion' => trim((string)$request->input('minimum_project_version')) ?: null];
         $data['is_published'] = $request->boolean('is_published');
         $data['is_official'] = $request->boolean('is_official');
         $data['is_verified'] = $request->boolean('is_verified');
@@ -199,7 +207,7 @@ class AdminMarketplaceController extends Controller
     {
         return $request->validate([
             'software_project_id' => ['required', 'exists:software_projects,id'],
-            'item_type' => ['required', Rule::in(['plugin', 'extension'])],
+            'item_type' => ['required', 'string', 'max:30'],
             'name' => ['required', 'string', 'max:160'],
             'slug' => ['nullable', 'string', 'max:120'],
             'item_id' => ['required', 'string', 'max:160'],
@@ -208,6 +216,8 @@ class AdminMarketplaceController extends Controller
             'icon_path' => ['nullable', 'string', 'max:255'],
             'website' => ['nullable', 'url', 'max:255'],
             'repository_url' => ['nullable', 'url', 'max:255'],
+            'support_url' => ['nullable', 'url', 'max:255'],
+            'license' => ['nullable', 'string', 'max:80'],
             'summary' => ['nullable', 'string', 'max:500'],
             'description' => ['nullable', 'string', 'max:30000'],
             'is_official' => ['nullable', 'boolean'],

@@ -19,10 +19,10 @@ class MarketplaceItem extends Model
         'category',
         'icon_path',
         'website',
-        'repository_url',
+        'repository_url', 'support_url', 'license',
         'summary',
         'description',
-        'permissions',
+        'permissions', 'capabilities', 'compatibility',
         'is_official',
         'is_verified',
         'is_published',
@@ -32,6 +32,8 @@ class MarketplaceItem extends Model
     {
         return [
             'permissions' => 'array',
+            'capabilities' => 'array',
+            'compatibility' => 'array',
             'is_official' => 'boolean',
             'is_verified' => 'boolean',
             'is_published' => 'boolean',

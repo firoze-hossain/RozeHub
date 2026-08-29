@@ -75,6 +75,101 @@ class DatabaseSeeder extends Seeder
             );
         }
 
+        // Project-specific ecosystem policies drive the public marketplace and developer portal.
+        // This keeps the extension model aligned with each product instead of treating all seven projects alike.
+        $ecosystems = [
+            'dbnavigator' => [
+                'ecosystem_type' => 'desktop_application',
+                'title' => 'Database client extensions',
+                'description' => 'Database drivers, SQL tooling, import/export utilities, visual tools and productivity extensions for DBNavigator.',
+                'item_types' => ['driver', 'plugin', 'formatter', 'exporter', 'importer', 'theme'],
+                'capabilities' => ['database.connect', 'database.read', 'database.write', 'schema.read', 'query.execute', 'filesystem.read', 'filesystem.write'],
+                'package_types' => ['zip', 'jar', 'native'],
+                'platforms' => ['Windows', 'macOS', 'Linux'],
+                'architectures' => ['x64', 'ARM64'],
+                'integration_targets' => ['PostgreSQL', 'MySQL', 'MariaDB', 'SQLite', 'Oracle', 'SQL Server', 'StratosDB'],
+            ],
+            'lumina' => [
+                'ecosystem_type' => 'development_environment',
+                'title' => 'IDE plugins and language tooling',
+                'description' => 'Language support, debuggers, build tools, themes, code intelligence and developer integrations for Lumina.',
+                'item_types' => ['plugin', 'language-support', 'debugger', 'tooling', 'theme', 'integration'],
+                'capabilities' => ['editor.read', 'editor.modify', 'workspace.read', 'workspace.write', 'terminal.execute', 'process.execute', 'network'],
+                'package_types' => ['zip', 'jar', 'native'],
+                'platforms' => ['Windows', 'macOS', 'Linux'],
+                'architectures' => ['x64', 'ARM64'],
+                'integration_targets' => ['Java', 'Roze', 'JavaScript', 'TypeScript', 'Maven', 'Gradle', 'Git', 'Docker', 'Kubernetes', 'StratosDB'],
+            ],
+            'roze-language' => [
+                'ecosystem_type' => 'programming_language',
+                'title' => 'Roze packages and developer modules',
+                'description' => 'Libraries, modules, compiler tooling, test utilities and integrations for the Roze programming language.',
+                'item_types' => ['package', 'module', 'library', 'tooling', 'compiler-plugin', 'integration'],
+                'capabilities' => ['source.read', 'source.write', 'compiler.execute', 'filesystem.read', 'filesystem.write', 'network'],
+                'package_types' => ['zip', 'jar', 'native', 'tar.gz'],
+                'platforms' => ['Windows', 'macOS', 'Linux', 'NOVAOS'],
+                'architectures' => ['x64', 'ARM64'],
+                'integration_targets' => ['Lumina', 'StratosDB', 'ThunderCall', 'NOVAOS'],
+            ],
+            'stratosdb' => [
+                'ecosystem_type' => 'database_engine',
+                'title' => 'Database engine extensions',
+                'description' => 'Storage, query, indexing, analytics, function and tooling extensions for StratosDB.',
+                'item_types' => ['extension', 'storage-engine', 'index', 'function', 'driver', 'tooling'],
+                'capabilities' => ['database.read', 'database.write', 'storage.read', 'storage.write', 'process.execute', 'filesystem.read', 'filesystem.write'],
+                'package_types' => ['zip', 'jar', 'native', 'tar.gz'],
+                'platforms' => ['Windows', 'macOS', 'Linux', 'NOVAOS'],
+                'architectures' => ['x64', 'ARM64'],
+                'integration_targets' => ['DBNavigator', 'Lumina', 'Roze', 'TrackEye'],
+            ],
+            'thundercall' => [
+                'ecosystem_type' => 'api_client',
+                'title' => 'API protocols and workflow extensions',
+                'description' => 'Protocol adapters, authentication providers, request processors, test tools and workflow integrations for ThunderCall.',
+                'item_types' => ['protocol', 'auth', 'workflow', 'processor', 'integration', 'theme'],
+                'capabilities' => ['request.read', 'request.modify', 'network', 'environment.read', 'environment.write', 'script.execute'],
+                'package_types' => ['zip', 'jar', 'native'],
+                'platforms' => ['Windows', 'macOS', 'Linux'],
+                'architectures' => ['x64', 'ARM64'],
+                'integration_targets' => ['HTTP', 'GraphQL', 'WebSocket', 'gRPC', 'SOAP', 'OAuth2', 'JWT'],
+            ],
+            'trackeye' => [
+                'ecosystem_type' => 'monitoring_platform',
+                'title' => 'Collectors, exporters and analytics',
+                'description' => 'Activity collectors, exporters, reporting integrations and analytics modules for TrackEye.',
+                'item_types' => ['collector', 'exporter', 'integration', 'analytics', 'report', 'theme'],
+                'capabilities' => ['activity.read', 'screen.capture', 'camera.capture', 'system.read', 'network', 'filesystem.write'],
+                'package_types' => ['zip', 'jar', 'native'],
+                'platforms' => ['Windows', 'macOS', 'Linux'],
+                'architectures' => ['x64', 'ARM64'],
+                'integration_targets' => ['PostgreSQL', 'StratosDB', 'CSV', 'JSON', 'RozeHub'],
+            ],
+            'novaos' => [
+                'ecosystem_type' => 'operating_system',
+                'title' => 'NOVAOS packages and system components',
+                'description' => 'Native applications, system services, drivers, desktop components and packages designed specifically for NOVAOS.',
+                'item_types' => ['application', 'system-component', 'driver', 'service', 'desktop-component', 'theme', 'package'],
+                'capabilities' => ['system.read', 'system.write', 'device.access', 'process.execute', 'filesystem.read', 'filesystem.write', 'network'],
+                'package_types' => ['zip', 'native', 'tar.gz'],
+                'platforms' => ['NOVAOS'],
+                'architectures' => ['x64', 'ARM64'],
+                'integration_targets' => ['Roze', 'Lumina', 'DBNavigator', 'ThunderCall', 'TrackEye', 'StratosDB'],
+            ],
+        ];
+
+        foreach ($ecosystems as $slug => $profile) {
+            $project = SoftwareProject::where('slug', $slug)->first();
+            if (!$project) continue;
+            \App\Models\ProjectEcosystemProfile::updateOrCreate(
+                ['software_project_id' => $project->id],
+                array_merge($profile, [
+                    'marketplace_enabled' => true,
+                    'community_contributions' => true,
+                    'moderation_required' => true,
+                ])
+            );
+        }
+
         $this->call(DocumentationSeeder::class);
 
         $navigator = SoftwareProject::where('slug', 'dbnavigator')->first();

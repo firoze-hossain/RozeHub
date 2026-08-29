@@ -257,15 +257,19 @@ MD
                     'updated_at' => now(),
                 ];
 
-                DB::table('documentation_sections')->updateOrInsert(
-                    [
+                $sectionQuery = DB::table('documentation_sections')
+                    ->where('software_project_id', $projectId)
+                    ->where('slug', $sectionSlug);
+
+                if ($sectionQuery->exists()) {
+                    $sectionQuery->update($sectionDataRow);
+                } else {
+                    DB::table('documentation_sections')->insert(array_merge($sectionDataRow, [
                         'software_project_id' => $projectId,
                         'slug' => $sectionSlug,
-                    ],
-                    array_merge($sectionDataRow, [
                         'created_at' => now(),
-                    ])
-                );
+                    ]));
+                }
 
                 $sectionId = DB::table('documentation_sections')
                     ->where('software_project_id', $projectId)
@@ -615,21 +619,26 @@ MD
                     ->where('slug', '!=', $sectionSlug)
                     ->max('sort_order') + 10;
 
-                DB::table('documentation_sections')->updateOrInsert(
-                    [
+                $enhancementSectionQuery = DB::table('documentation_sections')
+                    ->where('software_project_id', $projectId)
+                    ->where('slug', $sectionSlug);
+                $enhancementSectionData = [
+                    'title' => $sectionTitle,
+                    'description' => $sectionData['description'] ?? null,
+                    'icon' => $sectionData['icon'] ?? '◈',
+                    'sort_order' => $sortOrder,
+                    'is_published' => true,
+                    'updated_at' => now(),
+                ];
+                if ($enhancementSectionQuery->exists()) {
+                    $enhancementSectionQuery->update($enhancementSectionData);
+                } else {
+                    DB::table('documentation_sections')->insert(array_merge($enhancementSectionData, [
                         'software_project_id' => $projectId,
                         'slug' => $sectionSlug,
-                    ],
-                    [
-                        'title' => $sectionTitle,
-                        'description' => $sectionData['description'] ?? null,
-                        'icon' => $sectionData['icon'] ?? '◈',
-                        'sort_order' => $sortOrder,
-                        'is_published' => true,
-                        'updated_at' => now(),
                         'created_at' => now(),
-                    ]
-                );
+                    ]));
+                }
 
                 $sectionId = DB::table('documentation_sections')
                     ->where('software_project_id', $projectId)

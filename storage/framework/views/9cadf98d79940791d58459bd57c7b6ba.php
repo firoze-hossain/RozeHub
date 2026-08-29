@@ -11,4 +11,4 @@
 </head>
 <body><?php echo e($slot); ?><?php echo \Livewire\Mechanisms\FrontendAssets\FrontendAssets::scripts(); ?></body>
 </html>
-<?php /**PATH /home/firoze/Downloads/RozeHub-NOVAOS-public-section-fixed/rozehub_work/resources/views/components/layouts/app.blade.php ENDPATH**/ ?>
+<?php /**PATH /home/firoze/Downloads/RozeHub-Ecosystem-Extensions-Full-Updated/RozeHub-Ecosystem-Extensions-Updated/resources/views/components/layouts/app.blade.php ENDPATH**/ ?>

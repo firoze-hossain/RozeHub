@@ -5,12 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class SoftwareProject extends Model
 {
     use HasFactory;
 
     protected $fillable = ['name', 'slug', 'tagline', 'description', 'category', 'accent', 'icon', 'website', 'github_url'];
+
+    public function ecosystemProfile(): HasOne
+    {
+        return $this->hasOne(ProjectEcosystemProfile::class, 'software_project_id');
+    }
 
     public function releases(): HasMany
     {

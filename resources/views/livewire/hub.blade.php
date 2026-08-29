@@ -1,7 +1,7 @@
 <main class="shell">
         <header class="topbar">
             <a class="brand" href="{{ route('hub') }}"><span class="brand-logo"><img src="{{ asset('images/rozehub-ecosystem.png').'?v=20260828-professional-logo-2' }}" alt="RozeHub"></span><span>RozeHub</span></a>
-            <nav><a class="active" href="#catalog">Explore</a><a href="#releases">Releases</a><a href="{{ route('docs.index') }}">Documentation</a><a href="#community">Community</a></nav>
+            <nav><a class="active" href="#catalog">Explore</a><a href="{{ route('marketplace.index') }}">Extensions</a><a href="#releases">Releases</a><a href="{{ route('docs.index') }}">Documentation</a><a href="#community">Community</a></nav>
             <a class="studio-link" href="{{ route('admin.login') }}">Admin login <span>↗</span></a>
         </header>
 

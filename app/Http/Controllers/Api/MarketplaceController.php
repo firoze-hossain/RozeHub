@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\MarketplaceItem;
 use App\Models\MarketplaceRelease;
+use App\Models\SoftwareProject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -40,8 +41,21 @@ class MarketplaceController extends Controller
                 ->get();
         });
 
+        $projectModel = SoftwareProject::with('ecosystemProfile')->where('slug', $project)->first();
+
         return response()->json([
             'project' => $project,
+            'ecosystem' => $projectModel?->ecosystemProfile ? [
+                'type' => $projectModel->ecosystemProfile->ecosystem_type,
+                'title' => $projectModel->ecosystemProfile->title,
+                'description' => $projectModel->ecosystemProfile->description,
+                'itemTypes' => $projectModel->ecosystemProfile->item_types ?? [],
+                'capabilities' => $projectModel->ecosystemProfile->capabilities ?? [],
+                'packageTypes' => $projectModel->ecosystemProfile->package_types ?? [],
+                'platforms' => $projectModel->ecosystemProfile->platforms ?? [],
+                'architectures' => $projectModel->ecosystemProfile->architectures ?? [],
+                'integrations' => $projectModel->ecosystemProfile->integration_targets ?? [],
+            ] : null,
             'count' => $items->count(),
             'items' => $items->map(function (MarketplaceItem $item) {
                 $latest = $item->releases->first();
@@ -55,6 +69,13 @@ class MarketplaceController extends Controller
                     'category' => $item->category,
                     'summary' => $item->summary,
                     'description' => $item->description,
+                    'license' => $item->license,
+                    'website' => $item->website,
+                    'supportUrl' => $item->support_url,
+                    'repositoryUrl' => $item->repository_url,
+                    'permissions' => $item->permissions ?? [],
+                    'capabilities' => $item->capabilities ?? [],
+                    'compatibility' => $item->compatibility ?? [],
                     'iconUrl' => $item->icon_path ? asset($item->icon_path) : null,
                     'official' => (bool) $item->is_official,
                     'verified' => (bool) $item->is_verified,
@@ -83,7 +104,13 @@ class MarketplaceController extends Controller
                 'category' => $item->category,
                 'summary' => $item->summary,
                 'description' => $item->description,
+                'license' => $item->license,
+                'website' => $item->website,
+                'supportUrl' => $item->support_url,
+                'repositoryUrl' => $item->repository_url,
                 'permissions' => $item->permissions ?? [],
+                'capabilities' => $item->capabilities ?? [],
+                'compatibility' => $item->compatibility ?? [],
                 'official' => (bool) $item->is_official,
                 'verified' => (bool) $item->is_verified,
                 'downloads' => (int) $item->downloads_count,
