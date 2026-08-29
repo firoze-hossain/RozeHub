@@ -13,7 +13,7 @@
 <label>Package type<select name="package_type" id="package-type">@foreach($profile?->package_types ?? ['zip','jar','vsix','native','tar.gz'] as $v)<option @selected(old('package_type',$release->package_type)===$v)>{{ $v }}</option>@endforeach</select></label>
 <label>Platform<select name="platform" id="release-platform">@foreach($profile?->platforms ?? ['All','Windows','macOS','Linux'] as $v)<option @selected(old('platform',$release->platform)===$v)>{{ $v }}</option>@endforeach</select></label>
 <label>Architecture<select name="architecture">@foreach($profile?->architectures ?? ['All','x64','ARM64'] as $v)<option @selected(old('architecture',$release->architecture)===$v)>{{ $v }}</option>@endforeach</select></label>
-<label>Channel<select name="channel">@foreach(['Stable','Beta','Nightly'] as $v)<option @selected(old('channel',$release->channel)===$v)>{{ $v }}</option>@endforeach</select></label>
+<label>Channel<select name="channel">@foreach($profile?->channels ?? ['Stable','Beta','Nightly'] as $v)<option @selected(old('channel',$release->channel)===$v)>{{ $v }}</option>@endforeach</select></label>
 <label>Minimum project version<input name="minimum_app_version" value="{{ old('minimum_app_version',$release->minimum_app_version) }}" placeholder="1.0.0"></label>
 <label>Maximum project version<input name="maximum_app_version" value="{{ old('maximum_app_version',$release->maximum_app_version) }}" placeholder="2.x"></label>
 </div>

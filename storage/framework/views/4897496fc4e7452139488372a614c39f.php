@@ -141,4 +141,4 @@ renderEcosystem();
 </script>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('developer.layout',['title'=>($mode==='create'?'Create':'Edit').' Marketplace Item · RozeHub'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/firoze/projects/others/RozeHub/resources/views/developer/marketplace/item-form.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('developer.layout',['title'=>($mode==='create'?'Create':'Edit').' Marketplace Item · RozeHub'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/firoze/Documents/RozeHub-Phase1-Architecture-Foundation-FIXED/resources/views/developer/marketplace/item-form.blade.php ENDPATH**/ ?>

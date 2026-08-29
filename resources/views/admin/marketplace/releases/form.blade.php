@@ -17,24 +17,24 @@
     <label>Version<input name="version" required value="{{ old('version', $release->version) }}" placeholder="1.2.0"></label>
     <label>Package type
         <select name="package_type">
-            @foreach(['zip','jar','vsix','native','tar.gz'] as $type)
+            @foreach($profile?->package_types ?? ['zip','jar','vsix','native','tar.gz'] as $type)
                 <option @selected(old('package_type', $release->package_type) === $type)>{{ $type }}</option>
             @endforeach
         </select>
     </label>
     <label>Platform
         <select name="platform">
-            @foreach(['All','Windows','macOS','Linux'] as $v)<option @selected(old('platform',$release->platform)===$v)>{{ $v }}</option>@endforeach
+            @foreach($profile?->platforms ?? ['All','Windows','macOS','Linux'] as $v)<option @selected(old('platform',$release->platform)===$v)>{{ $v }}</option>@endforeach
         </select>
     </label>
     <label>Architecture
         <select name="architecture">
-            @foreach(['All','x64','ARM64'] as $v)<option @selected(old('architecture',$release->architecture)===$v)>{{ $v }}</option>@endforeach
+            @foreach($profile?->architectures ?? ['All','x64','ARM64'] as $v)<option @selected(old('architecture',$release->architecture)===$v)>{{ $v }}</option>@endforeach
         </select>
     </label>
     <label>Channel
         <select name="channel">
-            @foreach(['Stable','Beta','Nightly'] as $v)<option @selected(old('channel',$release->channel)===$v)>{{ $v }}</option>@endforeach
+            @foreach($profile?->channels ?? ['Stable','Beta','Nightly'] as $v)<option @selected(old('channel',$release->channel)===$v)>{{ $v }}</option>@endforeach
         </select>
     </label>
     <label>Minimum application version<input name="minimum_app_version" value="{{ old('minimum_app_version',$release->minimum_app_version) }}" placeholder="2.0.0"></label>

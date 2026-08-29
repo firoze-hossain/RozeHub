@@ -128,6 +128,13 @@ Route::middleware('auth')->prefix('developer')->name('developer.')->group(functi
     Route::delete('/uploads/{token}', [\App\Http\Controllers\AdminReleaseUploadController::class, 'cancel'])->name('uploads.cancel');
 });
 
+// Admin ecosystem policy management.
+Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/ecosystem', [\App\Http\Controllers\AdminEcosystemController::class, 'index'])->name('ecosystem.index');
+    Route::get('/ecosystem/{project}/edit', [\App\Http\Controllers\AdminEcosystemController::class, 'edit'])->name('ecosystem.edit');
+    Route::put('/ecosystem/{project}', [\App\Http\Controllers\AdminEcosystemController::class, 'update'])->name('ecosystem.update');
+});
+
 // Admin marketplace moderation queue.
 Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/marketplace/review', [\App\Http\Controllers\AdminMarketplaceReviewController::class, 'index'])->name('marketplace.review.index');

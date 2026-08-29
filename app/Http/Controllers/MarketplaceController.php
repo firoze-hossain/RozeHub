@@ -10,6 +10,8 @@ class MarketplaceController extends Controller
 {
     public function index(Request $request)
     {
+        $selectedProject = $request->filled('project') ? SoftwareProject::with('ecosystemProfile')->where('slug', $request->string('project'))->first() : null;
+
         $items = MarketplaceItem::with('project.ecosystemProfile')
             ->where('is_published', true)
             ->when($request->filled('project'), fn ($q) => $q->whereHas('project', fn ($p) => $p->where('slug', $request->string('project'))))
@@ -25,10 +27,11 @@ class MarketplaceController extends Controller
             ->whereHas('ecosystemProfile', fn ($q) => $q->where('marketplace_enabled', true))
             ->orderBy('name')->get();
 
-        $types = MarketplaceItem::where('is_published', true)->distinct()->orderBy('item_type')->pluck('item_type');
-        $capabilities = MarketplaceItem::where('is_published', true)->get(['capabilities'])->pluck('capabilities')->flatten()->filter()->unique()->sort()->values();
+        $types = MarketplaceItem::where('is_published', true)->when($selectedProject, fn($q)=>$q->where('software_project_id',$selectedProject->id))->distinct()->orderBy('item_type')->pluck('item_type');
+        $capabilities = MarketplaceItem::where('is_published', true)->when($selectedProject, fn($q)=>$q->where('software_project_id',$selectedProject->id))->get(['capabilities'])->pluck('capabilities')->flatten()->filter()->unique()->sort()->values();
+        $ecosystem = $selectedProject?->ecosystemProfile;
 
-        return view('marketplace.index', compact('items', 'projects', 'types', 'capabilities'));
+        return view('marketplace.index', compact('items', 'projects', 'types', 'capabilities', 'ecosystem'));
     }
 
     public function item(MarketplaceItem $item)

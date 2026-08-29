@@ -85,3 +85,8 @@ package.
 8. Verify SHA-256/signature.
 9. Install through the application's plugin manager.
 10. Restart only when the plugin architecture requires it.
+
+
+## Dynamic ecosystem contract
+
+The marketplace endpoint is project-policy driven. Clients should read `ecosystem` and `filters` from the response instead of assuming a fixed list of plugin types, platforms, architectures, package types or channels. Administrators configure these values under Project Ecosystem in RozeHub.

@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\MarketplaceDependency;
 use App\Models\MarketplaceItem;
 use App\Models\MarketplaceRelease;
+use App\Http\Requests\MarketplaceItemRequest;
+use App\Http\Requests\MarketplaceReleaseRequest;
+use App\Services\MarketplaceService;
 use App\Models\SoftwareProject;
 use App\Services\ReleaseStorageService;
 use Illuminate\Http\Request;
@@ -16,7 +19,7 @@ use Throwable;
 
 class AdminMarketplaceController extends Controller
 {
-    public function __construct(private readonly ReleaseStorageService $storage)
+    public function __construct(private readonly ReleaseStorageService $storage, private readonly MarketplaceService $marketplace)
     {
     }
 
@@ -39,26 +42,22 @@ class AdminMarketplaceController extends Controller
 
     public function create()
     {
+        $projects = SoftwareProject::with('ecosystemProfile')->orderBy('name')->get();
         return view('admin.marketplace.item-form', [
             'item' => new MarketplaceItem([
-                'item_type' => 'plugin',
-                'is_official' => true,
-                'is_verified' => true,
-            ]),
-            'projects' => SoftwareProject::with('ecosystemProfile')->orderBy('name')->get(),
-            'mode' => 'create',
+                'item_type' => $projects->first()?->ecosystemProfile?->item_types[0] ?? 'plugin',
+                'is_official' => true, 'is_verified' => true,
+            ]), 'projects' => $projects, 'mode' => 'create',
         ]);
     }
 
-    public function store(Request $request)
+    public function store(MarketplaceItemRequest $request)
     {
-        $data = $this->validatedItem($request);
-        $project = SoftwareProject::with('ecosystemProfile')->findOrFail($data['software_project_id']);
-        abort_unless(in_array($data['item_type'], $project->ecosystemProfile?->item_types ?? [], true), 422, 'Unsupported extension type for the selected project.');
-        $data['slug'] = Str::slug($data['slug'] ?: $data['name']);
-        $data['permissions'] = $this->permissions($request);
-        $data['capabilities'] = $this->permissions($request->input('capabilities_text'));
-        $data['compatibility'] = ['targets' => $this->permissions($request->input('compatibility_text')), 'minimumProjectVersion' => trim((string)$request->input('minimum_project_version')) ?: null];
+        $data = $request->validated();
+        $project = $this->marketplace->projectForMarketplace((int)$data['software_project_id']);
+        $this->marketplace->assertItemAllowed($project, $data['item_type']);
+        $data['slug'] = $data['slug'] ?: Str::slug($data['name']);
+        $meta=$this->marketplace->itemPayload($request); $data=array_merge($data,$meta);
         $data['is_published'] = $request->boolean('is_published');
         $data['is_official'] = $request->boolean('is_official');
         $data['is_verified'] = $request->boolean('is_verified');
@@ -77,15 +76,13 @@ class AdminMarketplaceController extends Controller
         ]);
     }
 
-    public function update(Request $request, MarketplaceItem $item)
+    public function update(MarketplaceItemRequest $request, MarketplaceItem $item)
     {
-        $data = $this->validatedItem($request, $item);
-        $project = SoftwareProject::with('ecosystemProfile')->findOrFail($data['software_project_id']);
-        abort_unless(in_array($data['item_type'], $project->ecosystemProfile?->item_types ?? [], true), 422, 'Unsupported extension type for the selected project.');
-        $data['slug'] = Str::slug($data['slug'] ?: $data['name']);
-        $data['permissions'] = $this->permissions($request);
-        $data['capabilities'] = $this->permissions($request->input('capabilities_text'));
-        $data['compatibility'] = ['targets' => $this->permissions($request->input('compatibility_text')), 'minimumProjectVersion' => trim((string)$request->input('minimum_project_version')) ?: null];
+        $data = $request->validated();
+        $project = $this->marketplace->projectForMarketplace((int)$data['software_project_id']);
+        $this->marketplace->assertItemAllowed($project, $data['item_type']);
+        $data['slug'] = $data['slug'] ?: Str::slug($data['name']);
+        $meta=$this->marketplace->itemPayload($request); $data=array_merge($data,$meta);
         $data['is_published'] = $request->boolean('is_published');
         $data['is_official'] = $request->boolean('is_official');
         $data['is_verified'] = $request->boolean('is_verified');
@@ -115,21 +112,16 @@ class AdminMarketplaceController extends Controller
 
     public function createRelease(MarketplaceItem $item)
     {
-        return view('admin.marketplace.releases.form', [
-            'item' => $item,
-            'release' => new MarketplaceRelease([
-                'platform' => 'All',
-                'architecture' => 'All',
-                'channel' => 'Stable',
-                'package_type' => 'zip',
-            ]),
-            'mode' => 'create',
-        ]);
+        $item->load('project.ecosystemProfile'); $p=$item->project->ecosystemProfile;
+        return view('admin.marketplace.releases.form', ['item'=>$item,'release'=>new MarketplaceRelease([
+            'platform'=>$p?->platforms[0] ?? 'All','architecture'=>$p?->architectures[0] ?? 'All','channel'=>$p?->channels[0] ?? 'Stable','package_type'=>$p?->package_types[0] ?? 'zip',
+        ]),'mode'=>'create']);
     }
 
-    public function storeRelease(Request $request, MarketplaceItem $item)
+    public function storeRelease(MarketplaceReleaseRequest $request, MarketplaceItem $item)
     {
-        $data = $this->validatedRelease($request);
+        $data = $request->validated();
+        $this->marketplace->assertReleaseAllowed($item, $data);
         $package = $this->packageFromRequest($request, $item, $data, true);
 
         $data = array_merge($data, $package);
@@ -148,19 +140,21 @@ class AdminMarketplaceController extends Controller
 
     public function editRelease(MarketplaceRelease $release)
     {
-        $release->load('item');
+        $release->load('item.project.ecosystemProfile');
 
         return view('admin.marketplace.releases.form', [
             'item' => $release->item,
+            'profile' => $release->item->project->ecosystemProfile,
             'release' => $release,
             'mode' => 'edit',
         ]);
     }
 
-    public function updateRelease(Request $request, MarketplaceRelease $release)
+    public function updateRelease(MarketplaceReleaseRequest $request, MarketplaceRelease $release)
     {
         $release->load('item');
-        $data = $this->validatedRelease($request, $release);
+        $data = $request->validated();
+        $this->marketplace->assertReleaseAllowed($release->item, $data);
         $data['is_published'] = $request->boolean('is_published');
         $data['is_mandatory'] = $request->boolean('is_mandatory');
         $data['published_at'] = $data['is_published'] ? ($release->published_at ?: now()) : null;
@@ -203,82 +197,11 @@ class AdminMarketplaceController extends Controller
             ->with('success', 'Marketplace release and package deleted.');
     }
 
-    private function validatedItem(Request $request, ?MarketplaceItem $item = null): array
-    {
-        return $request->validate([
-            'software_project_id' => ['required', 'exists:software_projects,id'],
-            'item_type' => ['required', 'string', 'max:30'],
-            'name' => ['required', 'string', 'max:160'],
-            'slug' => ['nullable', 'string', 'max:120'],
-            'item_id' => ['required', 'string', 'max:160'],
-            'vendor' => ['nullable', 'string', 'max:160'],
-            'category' => ['nullable', 'string', 'max:100'],
-            'icon_path' => ['nullable', 'string', 'max:255'],
-            'website' => ['nullable', 'url', 'max:255'],
-            'repository_url' => ['nullable', 'url', 'max:255'],
-            'support_url' => ['nullable', 'url', 'max:255'],
-            'license' => ['nullable', 'string', 'max:80'],
-            'summary' => ['nullable', 'string', 'max:500'],
-            'description' => ['nullable', 'string', 'max:30000'],
-            'is_official' => ['nullable', 'boolean'],
-            'is_verified' => ['nullable', 'boolean'],
-            'is_published' => ['nullable', 'boolean'],
-        ]);
-    }
-
-    private function permissions(Request $request): array
-    {
-        return array_values(array_filter(array_map(
-            'trim',
-            preg_split('/\r\n|\r|\n/', (string) $request->input('permissions_text', ''))
-        )));
-    }
-
     private function dependencyPayload(Request $request): array
     {
-        $raw = trim((string) $request->input('dependencies_text', ''));
-        if ($raw === '') {
-            return [];
-        }
-
-        $items = [];
-        foreach (preg_split('/\r\n|\r|\n/', $raw) as $line) {
-            $line = trim($line);
-            if ($line === '') continue;
-
-            [$id, $min] = array_pad(explode('@', $line, 2), 2, null);
-            $items[] = [
-                'itemId' => trim($id),
-                'minimumVersion' => $min ? trim($min) : null,
-            ];
-        }
-
-        return $items;
-    }
-
-    private function validatedRelease(Request $request, ?MarketplaceRelease $release = null): array
-    {
-        $rules = [
-            'version' => ['required', 'string', 'max:80'],
-            'platform' => ['required', 'string', 'max:30'],
-            'architecture' => ['required', 'string', 'max:20'],
-            'channel' => ['required', 'in:Stable,Beta,Nightly'],
-            'minimum_app_version' => ['nullable', 'string', 'max:80'],
-            'maximum_app_version' => ['nullable', 'string', 'max:80'],
-            'package_type' => ['required', 'string', 'max:30'],
-            'release_notes' => ['nullable', 'string', 'max:30000'],
-            'is_mandatory' => ['nullable', 'boolean'],
-            'is_published' => ['nullable', 'boolean'],
-            'package' => ['nullable', 'file', 'max:8388608'],
-            'upload_token' => ['nullable', 'string', 'regex:/^[A-Za-z0-9_-]{20,100}$/'],
-        ];
-
-        if (!$release) {
-            $rules['package'][] = 'required_without:upload_token';
-            $rules['upload_token'][] = 'required_without:package';
-        }
-
-        return $request->validate($rules);
+        $raw=trim((string)$request->input('dependencies_text','')); $out=[];
+        foreach(array_values(array_filter(array_map('trim',preg_split('/\r\n|\r|\n/',$raw)))) as $line){[$id,$min]=array_pad(explode('@',$line,2),2,null);$out[]=['itemId'=>trim($id),'minimumVersion'=>$min?trim($min):null];}
+        return $out;
     }
 
     private function packageFromRequest(Request $request, MarketplaceItem $item, array $metadata, bool $required): array

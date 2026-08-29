@@ -7,6 +7,9 @@ use App\Models\MarketplaceRelease;
 use App\Models\MarketplaceSubmission;
 use App\Models\MarketplaceNotification;
 use App\Models\SoftwareProject;
+use App\Http\Requests\MarketplaceItemRequest;
+use App\Http\Requests\MarketplaceReleaseRequest;
+use App\Services\MarketplaceService;
 use App\Services\MarketplaceModerationService;
 use App\Services\MarketplaceRiskService;
 use App\Services\ReleaseStorageService;
@@ -20,16 +23,13 @@ class DeveloperMarketplaceController extends Controller
     public function __construct(
         private readonly ReleaseStorageService $storage,
         private readonly MarketplaceRiskService $risk,
-        private readonly MarketplaceModerationService $moderation
+        private readonly MarketplaceModerationService $moderation,
+        private readonly MarketplaceService $marketplace
     ) {}
 
     private function projects()
     {
-        return SoftwareProject::query()
-            ->whereHas('ecosystemProfile', fn ($q) => $q->where('marketplace_enabled', true)->where('community_contributions', true))
-            ->with('ecosystemProfile')
-            ->orderBy('name')
-            ->get();
+        return $this->marketplace->projects(true);
     }
 
     public function dashboard()
@@ -67,19 +67,17 @@ class DeveloperMarketplaceController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(MarketplaceItemRequest $request)
     {
-        $data = $this->validateItem($request);
-        $project = $this->marketplaceProject($data['software_project_id']);
-        $this->assertTypeAllowed($project, $data['item_type']);
+        $data = $request->validated();
+        $project = $this->marketplace->projectForMarketplace((int)$data['software_project_id'], true);
+        $this->marketplace->assertItemAllowed($project, $data['item_type']);
 
-        $item = MarketplaceItem::create(array_merge($data, [
+        $meta = $this->marketplace->itemPayload($request);
+        $item = MarketplaceItem::create(array_merge($data, $meta, [
             'owner_user_id' => auth()->id(),
-            'slug' => Str::slug($data['slug'] ?: $data['name']),
-            'permissions' => $this->lines($request->input('permissions_text')),
-            'capabilities' => $this->lines($request->input('capabilities_text')),
-            'compatibility' => $this->compatibility($request),
-            'is_official' => false,
+            'slug' => $data['slug'],
+                        'is_official' => false,
             'is_verified' => false,
             'is_published' => false,
         ]));
@@ -90,7 +88,7 @@ class DeveloperMarketplaceController extends Controller
 
     public function edit(MarketplaceItem $item)
     {
-        $this->owned($item);
+        $this->authorize('update', $item);
         $item->load(['project.ecosystemProfile', 'releases' => fn ($q) => $q->with(['submissions' => fn ($sq) => $sq->latest()])->latest('id')]);
 
         return view('developer.marketplace.item-form', [
@@ -100,23 +98,21 @@ class DeveloperMarketplaceController extends Controller
         ]);
     }
 
-    public function update(Request $request, MarketplaceItem $item)
+    public function update(MarketplaceItemRequest $request, MarketplaceItem $item)
     {
-        $this->owned($item);
-        $data = $this->validateItem($request);
-        $project = $this->marketplaceProject($data['software_project_id']);
-        $this->assertTypeAllowed($project, $data['item_type']);
+        $this->authorize('update', $item);
+        $data = $request->validated();
+        $project = $this->marketplace->projectForMarketplace((int)$data['software_project_id'], true);
+        $this->marketplace->assertItemAllowed($project, $data['item_type']);
 
         if ($item->releases()->exists() && (int) $item->software_project_id !== (int) $project->id) {
             return back()->withErrors(['software_project_id' => 'The target project cannot be changed after a release has been created. Create a new marketplace item instead.']);
         }
 
-        $item->update(array_merge($data, [
-            'slug' => Str::slug($data['slug'] ?: $data['name']),
-            'permissions' => $this->lines($request->input('permissions_text')),
-            'capabilities' => $this->lines($request->input('capabilities_text')),
-            'compatibility' => $this->compatibility($request),
-            'is_published' => $item->is_published,
+        $meta = $this->marketplace->itemPayload($request);
+        $item->update(array_merge($data, $meta, [
+            'slug' => $data['slug'],
+                        'is_published' => $item->is_published,
         ]));
 
         return back()->with('success', 'Marketplace item updated.');
@@ -124,7 +120,7 @@ class DeveloperMarketplaceController extends Controller
 
     public function createRelease(MarketplaceItem $item)
     {
-        $this->owned($item);
+        $this->authorize('update', $item);
         $item->load('project.ecosystemProfile');
         $profile = $item->project->ecosystemProfile;
 
@@ -134,17 +130,18 @@ class DeveloperMarketplaceController extends Controller
             'release' => new MarketplaceRelease([
                 'platform' => $profile?->platforms[0] ?? 'All',
                 'architecture' => $profile?->architectures[0] ?? 'All',
-                'channel' => 'Stable',
+                'channel' => $profile?->channels[0] ?? 'Stable',
                 'package_type' => $profile?->package_types[0] ?? 'zip',
             ]),
         ]);
     }
 
-    public function storeRelease(Request $request, MarketplaceItem $item)
+    public function storeRelease(MarketplaceReleaseRequest $request, MarketplaceItem $item)
     {
-        $this->owned($item);
+        $this->authorize('update', $item);
         $item->load('project.ecosystemProfile');
-        $data = $this->validateRelease($request, true, $item);
+        $data = $request->validated();
+        $this->marketplace->assertReleaseAllowed($item, $data);
 
         $existing = MarketplaceRelease::where('marketplace_item_id', $item->id)
             ->where('version', $data['version'])
@@ -207,15 +204,16 @@ class DeveloperMarketplaceController extends Controller
     public function editRelease(MarketplaceRelease $release)
     {
         $release->load('item.project.ecosystemProfile');
-        $this->owned($release->item);
+        $this->authorize('update', $release);
         return view('developer.marketplace.release-form', ['item' => $release->item, 'profile' => $release->item->project->ecosystemProfile, 'release' => $release]);
     }
 
-    public function updateRelease(Request $request, MarketplaceRelease $release)
+    public function updateRelease(MarketplaceReleaseRequest $request, MarketplaceRelease $release)
     {
         $release->load('item.project.ecosystemProfile');
-        $this->owned($release->item);
-        $data = $this->validateRelease($request, false, $release->item);
+        $this->authorize('update', $release);
+        $data = $request->validated();
+        $this->marketplace->assertReleaseAllowed($release->item, $data);
         $old = $release->file_path;
         if ($request->hasFile('package') || $request->filled('upload_token')) {
             try { $data = array_merge($data, $this->package($request, $release->item, $data)); }
@@ -231,7 +229,7 @@ class DeveloperMarketplaceController extends Controller
     public function submit(Request $request, MarketplaceRelease $release)
     {
         $release->load('item.project.ecosystemProfile');
-        $this->owned($release->item);
+        $this->authorize('update', $release);
         if (!$release->file_path) return back()->withErrors(['release' => 'Upload a package before submitting.']);
 
         $existing = $release->submissions()->latest()->first();
@@ -260,84 +258,20 @@ class DeveloperMarketplaceController extends Controller
 
     public function submission(MarketplaceSubmission $submission)
     {
-        abort_unless($submission->submitted_by === auth()->id(), 403);
+        $this->authorize('view', $submission);
         $submission->load(['item.project', 'release', 'risks', 'logs.actor']);
         return view('developer.submission', compact('submission'));
     }
 
     public function resubmit(Request $request, MarketplaceSubmission $submission)
     {
-        abort_unless($submission->submitted_by === auth()->id(), 403);
+        $this->authorize('update', $submission);
         if ($submission->status !== MarketplaceSubmission::NEEDS_CHANGES) return back()->withErrors(['submission' => 'Only submissions requiring changes can be resubmitted.']);
         $submission->update(['developer_message' => $request->input('developer_message'), 'reviewer_notes' => null, 'decision_reason' => null]);
         $this->risk->assess($submission->load(['item', 'release']));
         $this->moderation->transition($submission, MarketplaceSubmission::SUBMITTED, auth()->user(), $request->input('developer_message'));
         $this->notifyAdmins($submission, 'Marketplace resubmitted', 'Developer resubmitted a marketplace release', "{$submission->item->name} v{$submission->release?->version} was resubmitted.");
         return back()->with('success', 'Resubmitted for review.');
-    }
-
-    private function marketplaceProject(int $id): SoftwareProject
-    {
-        return SoftwareProject::with('ecosystemProfile')
-            ->whereKey($id)
-            ->whereHas('ecosystemProfile', fn ($q) => $q->where('marketplace_enabled', true)->where('community_contributions', true))
-            ->firstOrFail();
-    }
-
-    private function assertTypeAllowed(SoftwareProject $project, string $type): void
-    {
-        abort_unless(in_array($type, $project->ecosystemProfile?->item_types ?? [], true), 422, 'This extension type is not supported by the selected project.');
-    }
-
-    private function owned(MarketplaceItem $item): void { abort_unless($item->owner_user_id === auth()->id(), 403); }
-
-    private function validateItem(Request $r): array
-    {
-        return $r->validate([
-            'software_project_id' => ['required', 'exists:software_projects,id'],
-            'item_type' => ['required', 'string', 'max:30'],
-            'name' => ['required', 'string', 'max:160'],
-            'slug' => ['nullable', 'string', 'max:120'],
-            'item_id' => ['required', 'string', 'max:160', 'regex:/^[A-Za-z0-9._:-]+$/'],
-            'vendor' => ['nullable', 'string', 'max:160'],
-            'category' => ['nullable', 'string', 'max:100'],
-            'icon_path' => ['nullable', 'string', 'max:255'],
-            'website' => ['nullable', 'url', 'max:255'],
-            'support_url' => ['nullable', 'url', 'max:255'],
-            'repository_url' => ['nullable', 'url', 'max:255'],
-            'license' => ['nullable', 'string', 'max:80'],
-            'summary' => ['nullable', 'string', 'max:500'],
-            'description' => ['nullable', 'string', 'max:30000'],
-        ]);
-    }
-
-    private function validateRelease(Request $r, bool $required, MarketplaceItem $item): array
-    {
-        $profile = $item->project?->ecosystemProfile;
-        $rules = [
-            'version' => ['required', 'string', 'max:80'],
-            'platform' => ['required', 'string', 'max:30'],
-            'architecture' => ['required', 'string', 'max:20'],
-            'channel' => ['required', 'in:Stable,Beta,Nightly'],
-            'minimum_app_version' => ['nullable', 'string', 'max:80'],
-            'maximum_app_version' => ['nullable', 'string', 'max:80'],
-            'package_type' => ['required', 'string', 'max:30'],
-            'release_notes' => ['nullable', 'string', 'max:30000'],
-            'is_mandatory' => ['nullable', 'boolean'],
-            'package' => ['nullable', 'file', 'max:8388608'],
-            'upload_token' => ['nullable', 'string', 'regex:/^[A-Za-z0-9_-]{20,100}$/'],
-        ];
-        if ($required) { $rules['package'][] = 'required_without:upload_token'; $rules['upload_token'][] = 'required_without:package'; }
-
-        $data = $r->validate($rules);
-        if ($profile) {
-            foreach ([['platform', 'platforms'], ['architecture', 'architectures'], ['package_type', 'package_types']] as [$field, $source]) {
-                if (!empty($profile->{$source}) && !in_array($data[$field], $profile->{$source}, true)) {
-                    throw ValidationException::withMessages([$field => "{$data[$field]} is not supported by {$item->project->name}."]);
-                }
-            }
-        }
-        return $data;
     }
 
     private function lines(?string $value): array
@@ -360,12 +294,7 @@ class DeveloperMarketplaceController extends Controller
         return $out;
     }
 
-    private function package(Request $r, MarketplaceItem $item, array $metadata): array
-    {
-        if ($r->filled('upload_token')) return $this->storage->consumeUploadTokenToMarketplace($r->input('upload_token'), $item, $metadata);
-        if ($r->hasFile('package')) return $this->storage->storeMarketplaceUploadedFile($r->file('package'), $item, $metadata);
-        throw new \RuntimeException('Please select a package.');
-    }
+    private function package(Request $r, MarketplaceItem $item, array $metadata): array { return $this->marketplace->package($r, $item, $metadata, $this->storage); }
 
     private function notifyAdmins(MarketplaceSubmission $submission, string $type, string $title, string $message): void
     {

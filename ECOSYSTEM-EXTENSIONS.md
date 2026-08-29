@@ -71,3 +71,13 @@ The ecosystem profiles deliberately expose integration targets so that future of
 - NOVAOS → Lumina / DBNavigator / ThunderCall / TrackEye / StratosDB / Roze
 
 This keeps RozeHub's catalog extensible while preserving the fact that NOVAOS is a platform, not another desktop application.
+
+## Phase 1 architecture foundation
+
+- **Project ecosystem admin** is the source of truth for each project's marketplace behavior.
+- **Project-specific rules are data-driven** through `project_ecosystem_profiles`; controllers do not contain seven-project conditionals.
+- **Marketplace API** exposes the selected ecosystem schema (`itemTypes`, `capabilities`, `packageTypes`, `platforms`, `architectures`, `channels`, `integrations`) and validates requested filters against that schema.
+- **Form Requests** isolate HTTP validation from marketplace business logic.
+- **Policies** authorize developer access to marketplace items, releases and submissions.
+- **MarketplaceService** centralizes ecosystem eligibility, release compatibility, metadata normalization and package handling.
+- **Automated tests** cover dynamic ecosystem validation, API schema exposure, developer ownership and administrator policy editing.

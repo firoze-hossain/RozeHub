@@ -87,6 +87,7 @@ class DatabaseSeeder extends Seeder
                 'package_types' => ['zip', 'jar', 'native'],
                 'platforms' => ['Windows', 'macOS', 'Linux'],
                 'architectures' => ['x64', 'ARM64'],
+                'channels' => ['Stable', 'Beta', 'Nightly'],
                 'integration_targets' => ['PostgreSQL', 'MySQL', 'MariaDB', 'SQLite', 'Oracle', 'SQL Server', 'StratosDB'],
             ],
             'lumina' => [
@@ -98,6 +99,7 @@ class DatabaseSeeder extends Seeder
                 'package_types' => ['zip', 'jar', 'native'],
                 'platforms' => ['Windows', 'macOS', 'Linux'],
                 'architectures' => ['x64', 'ARM64'],
+                'channels' => ['Stable', 'Beta', 'Nightly'],
                 'integration_targets' => ['Java', 'Roze', 'JavaScript', 'TypeScript', 'Maven', 'Gradle', 'Git', 'Docker', 'Kubernetes', 'StratosDB'],
             ],
             'roze-language' => [
@@ -109,6 +111,7 @@ class DatabaseSeeder extends Seeder
                 'package_types' => ['zip', 'jar', 'native', 'tar.gz'],
                 'platforms' => ['Windows', 'macOS', 'Linux', 'NOVAOS'],
                 'architectures' => ['x64', 'ARM64'],
+                'channels' => ['Stable', 'Beta', 'Nightly'],
                 'integration_targets' => ['Lumina', 'StratosDB', 'ThunderCall', 'NOVAOS'],
             ],
             'stratosdb' => [
@@ -120,6 +123,7 @@ class DatabaseSeeder extends Seeder
                 'package_types' => ['zip', 'jar', 'native', 'tar.gz'],
                 'platforms' => ['Windows', 'macOS', 'Linux', 'NOVAOS'],
                 'architectures' => ['x64', 'ARM64'],
+                'channels' => ['Stable', 'Beta', 'Nightly'],
                 'integration_targets' => ['DBNavigator', 'Lumina', 'Roze', 'TrackEye'],
             ],
             'thundercall' => [
@@ -131,6 +135,7 @@ class DatabaseSeeder extends Seeder
                 'package_types' => ['zip', 'jar', 'native'],
                 'platforms' => ['Windows', 'macOS', 'Linux'],
                 'architectures' => ['x64', 'ARM64'],
+                'channels' => ['Stable', 'Beta', 'Nightly'],
                 'integration_targets' => ['HTTP', 'GraphQL', 'WebSocket', 'gRPC', 'SOAP', 'OAuth2', 'JWT'],
             ],
             'trackeye' => [
@@ -142,6 +147,7 @@ class DatabaseSeeder extends Seeder
                 'package_types' => ['zip', 'jar', 'native'],
                 'platforms' => ['Windows', 'macOS', 'Linux'],
                 'architectures' => ['x64', 'ARM64'],
+                'channels' => ['Stable', 'Beta', 'Nightly'],
                 'integration_targets' => ['PostgreSQL', 'StratosDB', 'CSV', 'JSON', 'RozeHub'],
             ],
             'novaos' => [
@@ -153,6 +159,7 @@ class DatabaseSeeder extends Seeder
                 'package_types' => ['zip', 'native', 'tar.gz'],
                 'platforms' => ['NOVAOS'],
                 'architectures' => ['x64', 'ARM64'],
+                'channels' => ['Stable', 'Beta', 'Nightly'],
                 'integration_targets' => ['Roze', 'Lumina', 'DBNavigator', 'ThunderCall', 'TrackEye', 'StratosDB'],
             ],
         ];

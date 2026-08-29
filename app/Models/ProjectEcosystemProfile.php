@@ -10,7 +10,7 @@ class ProjectEcosystemProfile extends Model
     protected $fillable = [
         'software_project_id', 'ecosystem_type', 'title', 'description',
         'item_types', 'capabilities', 'package_types', 'platforms',
-        'architectures', 'integration_targets', 'marketplace_enabled',
+        'architectures', 'channels', 'integration_targets', 'marketplace_enabled',
         'community_contributions', 'moderation_required',
     ];
 
@@ -22,6 +22,7 @@ class ProjectEcosystemProfile extends Model
             'package_types' => 'array',
             'platforms' => 'array',
             'architectures' => 'array',
+            'channels' => 'array',
             'integration_targets' => 'array',
             'marketplace_enabled' => 'boolean',
             'community_contributions' => 'boolean',
