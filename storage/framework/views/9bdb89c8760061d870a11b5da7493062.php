@@ -119,4 +119,4 @@
         </div>
     </nav>
 <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-<?php /**PATH /home/firoze/projects/others/RozeHub/vendor/laravel/framework/src/Illuminate/Pagination/resources/views/tailwind.blade.php ENDPATH**/ ?>
+<?php /**PATH /home/firoze/Documents/RozeHub-Ecosystem-Extensions-Full-Updated-FIXED/RozeHub-Ecosystem-Extensions-Updated/vendor/laravel/framework/src/Illuminate/Pagination/resources/views/tailwind.blade.php ENDPATH**/ ?>

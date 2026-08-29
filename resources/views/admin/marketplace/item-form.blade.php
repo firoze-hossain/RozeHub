@@ -14,8 +14,21 @@
 <div class="ecosystem-grid"><section class="market-permission-box"><h3>Capabilities</h3><p class="muted" id="admin-capability-help"></p><div id="admin-capability-chips" class="chip-list"></div><textarea name="capabilities_text" rows="5">{{ old('capabilities_text',implode("\n",$item->capabilities??[])) }}</textarea></section><section class="market-permission-box"><h3>Compatibility & integrations</h3><div id="admin-integration-chips" class="chip-list"></div><textarea name="compatibility_text" rows="5">{{ old('compatibility_text',implode("\n",$item->compatibility['targets']??[])) }}</textarea><input name="minimum_project_version" value="{{ old('minimum_project_version',$item->compatibility['minimumProjectVersion']??'') }}" placeholder="Minimum project version"></section></div>
 <div class="check-row"><label><input type="checkbox" name="is_official" value="1" @checked(old('is_official',$item->is_official))> Official</label><label><input type="checkbox" name="is_verified" value="1" @checked(old('is_verified',$item->is_verified))> Verified publisher</label><label><input type="checkbox" name="is_published" value="1" @checked(old('is_published',$item->is_published))> Publish</label></div>
 <div class="form-actions"><a class="admin-button" href="{{ route('admin.marketplace.index') }}">Cancel</a><button class="admin-button primary">{{ $mode === 'create' ? 'Create item' : 'Save changes' }}</button></div></form>
+@php
+    $adminEcosystemPayload = $projects->mapWithKeys(function ($p) {
+        $profile = $p->ecosystemProfile;
+
+        return [
+            $p->id => [
+                'types' => $profile?->item_types ?? [],
+                'capabilities' => $profile?->capabilities ?? [],
+                'integrations' => $profile?->integration_targets ?? [],
+            ],
+        ];
+    })->toArray();
+@endphp
 <script>
-const adminEcosystems=@json($projects->mapWithKeys(fn($p)=>[$p->id=>['types'=>$p->ecosystemProfile?->item_types??[],'capabilities'=>$p->ecosystemProfile?->capabilities??[],'integrations'=>$p->ecosystemProfile?->integration_targets??[]]]));
+const adminEcosystems={{ Illuminate\Support\Js::from($adminEcosystemPayload) }};
 const adminSelectedType=@json(old('item_type',$item->item_type));const ap=document.getElementById('admin-project'),at=document.getElementById('admin-type');
 function adminRender(){const e=adminEcosystems[ap.value]||{types:[],capabilities:[],integrations:[]};at.innerHTML=e.types.map(x=>`<option value="${x}">${x.replaceAll('-',' ').replace(/\b\w/g,c=>c.toUpperCase())}</option>`).join('');if(!at.dataset.changed&&e.types.includes(adminSelectedType))at.value=adminSelectedType;document.getElementById('admin-capability-chips').innerHTML=e.capabilities.map(x=>`<button type="button" class="chip" onclick="adminAdd('capabilities_text','${x}')">${x}</button>`).join('');document.getElementById('admin-integration-chips').innerHTML=e.integrations.map(x=>`<button type="button" class="chip" onclick="adminAdd('compatibility_text','${x}')">${x}</button>`).join('');}
 function adminAdd(name,v){const el=document.querySelector(`[name="${name}"]`);let a=el.value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);if(!a.includes(v))a.push(v);el.value=a.join('\n');}ap.addEventListener('change',()=>{at.dataset.changed='1';adminRender()});adminRender();

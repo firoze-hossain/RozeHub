@@ -105,16 +105,25 @@
 </section>
 @endif
 
+@php
+    $ecosystemPayload = $projects->mapWithKeys(function ($p) {
+        $profile = $p->ecosystemProfile;
+
+        return [
+            $p->id => [
+                'name' => $p->name,
+                'kind' => $profile?->ecosystem_type,
+                'title' => $profile?->title,
+                'description' => $profile?->description,
+                'types' => $profile?->item_types ?? [],
+                'capabilities' => $profile?->capabilities ?? [],
+                'integrations' => $profile?->integration_targets ?? [],
+            ],
+        ];
+    })->toArray();
+@endphp
 <script>
-const ecosystems = @json($projects->mapWithKeys(fn($p) => [$p->id => [
-    'name'=>$p->name,
-    'kind'=>$p->ecosystemProfile?->ecosystem_type,
-    'title'=>$p->ecosystemProfile?->title,
-    'description'=>$p->ecosystemProfile?->description,
-    'types'=>$p->ecosystemProfile?->item_types ?? [],
-    'capabilities'=>$p->ecosystemProfile?->capabilities ?? [],
-    'integrations'=>$p->ecosystemProfile?->integration_targets ?? [],
-]]));
+const ecosystems = {{ Illuminate\Support\Js::from($ecosystemPayload) }};
 const selectedType = @json(old('item_type',$item->item_type));
 const projectSelect=document.getElementById('project-select'), typeSelect=document.getElementById('item-type');
 function renderEcosystem(){
