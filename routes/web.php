@@ -2,7 +2,7 @@
 use App\Http\Controllers\AdminAuthController; use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminAccountController; use App\Http\Controllers\AdminProjectController; use App\Http\Controllers\AdminReleaseController; use App\Http\Controllers\AdminReviewController; use App\Http\Controllers\ReleaseDownloadController;
 use App\Http\Controllers\NovaosAdminController;
-use App\Http\Controllers\NovaosReleaseController; use App\Http\Controllers\AdminReleaseUploadController; use App\Livewire\Hub; use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\NovaosReleaseController; use App\Http\Controllers\AdminReleaseUploadController; use App\Livewire\Hub; use App\Models\SoftwareProject; use Illuminate\Support\Facades\Route;
 Route::get('/',Hub::class)->name('hub');
 Route::get('/download/{release}',ReleaseDownloadController::class)->middleware('throttle:30,1')->name('releases.download');
 Route::get('/admin/login',[AdminAuthController::class,'showLogin'])->name('admin.login');
@@ -151,3 +151,14 @@ Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(func
     Route::post('/marketplace/review/{submission}/decision', [\App\Http\Controllers\AdminMarketplaceReviewController::class, 'decide'])->name('marketplace.review.decide');
     Route::post('/marketplace/review/{submission}/unpublish', [\App\Http\Controllers\AdminMarketplaceReviewController::class, 'unpublish'])->name('marketplace.review.unpublish');
 });
+
+// Phase 3 — GitHub ecosystem.
+Route::get('/projects/{project:slug}/contribute', [\App\Http\Controllers\GithubController::class, 'contribute'])->name('github.contribute');
+Route::post('/github/webhook', [\App\Http\Controllers\GithubController::class, 'webhook'])->name('github.webhook');
+Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/projects/{project}/github', [\App\Http\Controllers\AdminGithubController::class, 'show'])->name('github.show');
+    Route::post('/projects/{project}/github/sync', [\App\Http\Controllers\AdminGithubController::class, 'sync'])->name('github.sync');
+    Route::get('/projects/{project}/github/documentation', [\App\Http\Controllers\AdminGithubController::class, 'editDocumentation'])->name('github.documentation');
+    Route::put('/projects/{project}/github/documentation', [\App\Http\Controllers\AdminGithubController::class, 'updateDocumentation'])->name('github.documentation.update');
+});
+Route::get('/api/v1/projects/{project:slug}/github', function(SoftwareProject $project){$repo=$project->githubRepository()->with(['contributors'=>fn($q)=>$q->orderByDesc('contributions')->limit(25),'issues'=>fn($q)=>$q->where('state','open')->orderByDesc('updated_at_github')->limit(20),'pullRequests'=>fn($q)=>$q->where('state','open')->orderByDesc('updated_at_github')->limit(20),'releases'=>fn($q)=>$q->orderByDesc('published_at_github')->limit(10)])->first(); return response()->json(['project'=>$project->only(['name','slug','github_url']),'repository'=>$repo]);})->middleware('throttle:60,1')->name('api.github.project');

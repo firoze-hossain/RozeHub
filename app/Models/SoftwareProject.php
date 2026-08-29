@@ -39,4 +39,9 @@ class SoftwareProject extends Model
     {
         return $this->hasMany(Review::class);
     }
+
+    public function githubRepository(): HasOne
+    {
+        return $this->hasOne(GithubRepository::class, 'software_project_id');
+    }
 }

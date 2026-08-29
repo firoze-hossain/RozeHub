@@ -81,3 +81,15 @@ This keeps RozeHub's catalog extensible while preserving the fact that NOVAOS is
 - **Policies** authorize developer access to marketplace items, releases and submissions.
 - **MarketplaceService** centralizes ecosystem eligibility, release compatibility, metadata normalization and package handling.
 - **Automated tests** cover dynamic ecosystem validation, API schema exposure, developer ownership and administrator policy editing.
+
+## Phase 3 — GitHub ecosystem
+
+RozeHub can synchronize a software project's configured GitHub repository into a local read model: repository metadata, contributors, issues, pull requests and releases. Public contribution pages link developers directly to the repository, issues, pull requests and discussions.
+
+### Configuration
+
+Set `GITHUB_TOKEN` to a GitHub token when higher API limits or repository write access are required. Set `GITHUB_WEBHOOK_SECRET` to the same secret configured on the repository webhook. GitHub should send events to `/github/webhook` using `application/json` and the `X-Hub-Signature-256` header.
+
+### Documentation editing
+
+Administrators can edit a repository file from the project GitHub page. RozeHub reads the file through the GitHub Contents API and commits the edited content back to the selected branch. A GitHub token with repository contents write permission is required.

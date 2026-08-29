@@ -31,6 +31,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias(['admin' => AdminMiddleware::class]);
 
+        // GitHub webhooks are authenticated by X-Hub-Signature-256, not Laravel's CSRF token.
+        $middleware->validateCsrfTokens(except: ['github/webhook']);
+
         $middleware->redirectGuestsTo(
             fn (Request $request) => $request->is('developer/*') || $request->is('developer') ? route('developer.login') : route('admin.login')
         );
