@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Release;
 use App\Models\SoftwareProject;
 use App\Services\ReleaseStorageService;
+use App\Services\ReleasePlatformService;
 use App\Models\ReleaseArtifact;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -112,11 +113,12 @@ class AdminReleaseController extends Controller
         return redirect()->route('admin.releases.index')->with('success', 'Application release and distribution artifacts updated.');
     }
 
-    public function toggle(Release $release)
+    public function toggle(Release $release, ReleasePlatformService $platform)
     {
         abort_if($release->project?->slug === 'novaos', 404);
         $publish = !$release->is_published;
         $release->update(['is_published' => $publish, 'published_at' => $publish ? now() : null]);
+        if ($publish) { $platform->healthCheck($release); $platform->notify($release); }
 
         return back()->with('success', $publish ? 'Release published.' : 'Release unpublished.');
     }
@@ -213,6 +215,7 @@ class AdminReleaseController extends Controller
             'channel' => ['required', 'in:Stable,Beta,Nightly'],
             'minimum_version' => ['nullable', 'string', 'max:80'],
             'is_mandatory' => ['nullable', 'boolean'],
+            'rollout_percentage' => ['nullable', 'integer', 'min:1', 'max:100'],
             'notes' => ['nullable', 'string', 'max:10000'],
             'package' => ['nullable', 'file', 'max:8388608'],
             'upload_token' => ['nullable', 'string', 'regex:/^[A-Za-z0-9_-]{20,100}$/'],

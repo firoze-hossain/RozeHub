@@ -19,6 +19,7 @@ class UpdateController extends Controller
             'platform' => ['required', 'string', 'max:30'],
             'architecture' => ['required', 'string', 'max:20'],
             'channel' => ['nullable', 'string', 'max:20'],
+            'client_id' => ['nullable', 'string', 'max:200'],
         ]);
 
         $platform = $this->normalizePlatform($data['platform']);
@@ -35,6 +36,8 @@ class UpdateController extends Controller
                 ->where('architecture', $architecture)
                 ->where('channel', $channel)
                 ->where('is_published', true)
+                ->whereIn('processing_status', ['READY','PROCESSING'])
+                ->whereIn('health_status', ['HEALTHY','UNKNOWN'])
                 ->whereNotNull('file_path')
                 ->whereNotNull('file_name')
                 ->orderByDesc('published_at')
@@ -43,6 +46,7 @@ class UpdateController extends Controller
         );
 
         $latest = $releases
+            ->filter(fn (Release $release) => $this->eligibleForRollout($release, $data['client_id'] ?? null))
             ->filter(fn (Release $release) => $this->isNewer($release->version, $current))
             ->sort(fn (Release $a, Release $b) => $this->compareVersions($b->version, $a->version))
             ->first();
@@ -132,6 +136,8 @@ class UpdateController extends Controller
         $query = Release::query()
             ->where('software_project_id', $project->id)
             ->where('is_published', true)
+            ->whereIn('processing_status', ['READY','PROCESSING'])
+            ->whereIn('health_status', ['HEALTHY','UNKNOWN'])
             ->whereNotNull('file_path');
 
         if (!empty($data['platform'])) {
@@ -211,6 +217,15 @@ class UpdateController extends Controller
             'sha256' => $artifact->sha256,
             'downloadUrl' => route('api.updates.download', ['release' => $release, 'purpose' => strtolower($artifact->purpose)]),
         ];
+    }
+
+    private function eligibleForRollout(Release $release, ?string $clientId): bool
+    {
+        $percentage=max(1,min(100,(int)($release->rollout_percentage ?? 100)));
+        if($percentage>=100) return true;
+        if(!$clientId) return false;
+        $bucket=(hexdec(substr(hash('sha256',$release->project?->slug.'|'.$clientId),0,8)) % 100)+1;
+        return $bucket <= $percentage;
     }
 
     private function normalizePlatform(string $platform): string

@@ -1,0 +1,8 @@
+@extends('admin.layout')
+@section('content')
+<div class="admin-page"><div class="page-header"><div><h1>{{$project->name}} — Release Channels</h1><p>Configure channels without changing application code.</p></div></div>
+@if(session('success'))<div class="alert alert-success">{{session('success')}}</div>@endif
+@if(session('error'))<div class="alert alert-danger">{{session('error')}}</div>@endif
+<div class="card"><h2>Add channel</h2><form method="POST" action="{{route('admin.release-channels.store',$project)}}">@csrf<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><input name="key" placeholder="stable" required><input name="name" placeholder="Stable" required><textarea name="description" placeholder="Description"></textarea><input name="sort_order" type="number" value="0"><label><input type="checkbox" name="is_enabled" value="1" checked> Enabled</label><label><input type="checkbox" name="is_default" value="1"> Default</label></div><button class="btn btn-primary" style="margin-top:12px">Create channel</button></form></div>
+<div class="card" style="margin-top:20px"><table class="admin-table"><thead><tr><th>Key</th><th>Name</th><th>Default</th><th>Enabled</th><th>Action</th></tr></thead><tbody>@foreach($channels as $channel)<tr><td>{{$channel->key}}</td><td>{{$channel->name}}</td><td>{{$channel->is_default?'Yes':'No'}}</td><td>{{$channel->is_enabled?'Yes':'No'}}</td><td>@if(!$channel->is_default)<form method="POST" action="{{route('admin.release-channels.destroy',[$project,$channel])}}">@csrf @method('DELETE')<button class="btn btn-sm btn-danger">Delete</button></form>@endif</td></tr>@endforeach</tbody></table></div></div>
+@endsection

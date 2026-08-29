@@ -16,3 +16,9 @@ Artisan::command('rozehub:release-upload-cleanup {--hours=24}', function () {
 })->purpose('Remove abandoned external release-upload chunks');
 
 Schedule::command('rozehub:release-upload-cleanup --hours=24')->daily();
+
+Artisan::command('rozehub:process-releases {--limit=25}', function () {
+    $ids = \App\Models\Release::where('processing_status','QUEUED')->orderBy('id')->limit((int)$this->option('limit'))->pluck('id');
+    foreach ($ids as $id) \App\Jobs\ProcessReleaseArtifact::dispatch($id);
+    $this->info("Queued {$ids->count()} release(s).");
+})->purpose('Queue pending release artifact processing jobs.');

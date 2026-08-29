@@ -7,10 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 
-
 class Release extends Model
 {
-    protected $fillable = ['software_project_id', 'version', 'major_version', 'codename', 'build_number', 'platform', 'architecture', 'channel', 'minimum_version', 'is_mandatory', 'file_path', 'file_name', 'file_size', 'sha256', 'notes', 'is_published', 'published_at', 'downloads_count'];
+    protected $fillable = ['software_project_id', 'version', 'major_version', 'codename', 'build_number', 'platform', 'architecture', 'channel', 'minimum_version', 'is_mandatory', 'file_path', 'file_name', 'file_size', 'sha256', 'notes', 'is_published', 'published_at', 'downloads_count', 'source', 'github_release_id', 'processing_status', 'processing_error', 'signature_status', 'signature_algorithm', 'signature_path', 'verified_at', 'health_status', 'health_checked_at', 'rollback_of_release_id', 'rolled_back_at', 'rollout_percentage'];
 
     protected static function booted(): void
     {
@@ -27,7 +26,7 @@ class Release extends Model
 
     protected function casts(): array
     {
-        return ['is_published' => 'boolean', 'is_mandatory' => 'boolean', 'published_at' => 'datetime'];
+        return ['is_published' => 'boolean', 'is_mandatory' => 'boolean', 'published_at' => 'datetime', 'verified_at' => 'datetime', 'health_checked_at' => 'datetime', 'rolled_back_at' => 'datetime', 'rollout_percentage' => 'integer'];
     }
 
     public function project(): BelongsTo
@@ -38,6 +37,16 @@ class Release extends Model
     public function artifacts(): HasMany
     {
         return $this->hasMany(ReleaseArtifact::class);
+    }
+
+    public function githubRelease(): BelongsTo
+    {
+        return $this->belongsTo(GithubRelease::class, 'github_release_id');
+    }
+
+    public function rollbackOf(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'rollback_of_release_id');
     }
 
     public function documentationPages(): HasMany

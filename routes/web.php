@@ -162,3 +162,21 @@ Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(func
     Route::put('/projects/{project}/github/documentation', [\App\Http\Controllers\AdminGithubController::class, 'updateDocumentation'])->name('github.documentation.update');
 });
 Route::get('/api/v1/projects/{project:slug}/github', function(SoftwareProject $project){$repo=$project->githubRepository()->with(['contributors'=>fn($q)=>$q->orderByDesc('contributions')->limit(25),'issues'=>fn($q)=>$q->where('state','open')->orderByDesc('updated_at_github')->limit(20),'pullRequests'=>fn($q)=>$q->where('state','open')->orderByDesc('updated_at_github')->limit(20),'releases'=>fn($q)=>$q->orderByDesc('published_at_github')->limit(10)])->first(); return response()->json(['project'=>$project->only(['name','slug','github_url']),'repository'=>$repo]);})->middleware('throttle:60,1')->name('api.github.project');
+
+// Phase 4 — release platform.
+Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/release-platform', [\App\Http\Controllers\AdminReleasePlatformController::class, 'index'])->name('release-platform.index');
+    Route::post('/projects/{project}/release-platform/github-sync', [\App\Http\Controllers\AdminReleasePlatformController::class, 'syncGithub'])->name('release-platform.github-sync');
+    Route::post('/release-platform/{release}/process', [\App\Http\Controllers\AdminReleasePlatformController::class, 'process'])->name('release-platform.process');
+    Route::post('/release-platform/{release}/health', [\App\Http\Controllers\AdminReleasePlatformController::class, 'health'])->name('release-platform.health');
+    Route::post('/release-platform/{release}/rollback', [\App\Http\Controllers\AdminReleasePlatformController::class, 'rollback'])->name('release-platform.rollback');
+    Route::get('/projects/{project}/release-channels', [\App\Http\Controllers\AdminReleasePlatformController::class, 'channels'])->name('release-channels.index');
+    Route::post('/projects/{project}/release-channels', [\App\Http\Controllers\AdminReleasePlatformController::class, 'storeChannel'])->name('release-channels.store');
+    Route::put('/projects/{project}/release-channels/{channel}', [\App\Http\Controllers\AdminReleasePlatformController::class, 'updateChannel'])->name('release-channels.update');
+    Route::delete('/projects/{project}/release-channels/{channel}', [\App\Http\Controllers\AdminReleasePlatformController::class, 'destroyChannel'])->name('release-channels.destroy');
+});
+Route::middleware('auth')->prefix('api/v1')->group(function(){
+    Route::get('/release-notifications',[\App\Http\Controllers\ReleaseNotificationController::class,'index'])->name('api.release-notifications');
+    Route::post('/release-notifications/{notification}/read',[\App\Http\Controllers\ReleaseNotificationController::class,'read'])->name('api.release-notifications.read');
+    Route::post('/release-notifications/read-all',[\App\Http\Controllers\ReleaseNotificationController::class,'readAll'])->name('api.release-notifications.read-all');
+});

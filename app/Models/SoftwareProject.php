@@ -18,6 +18,9 @@ class SoftwareProject extends Model
         return $this->hasOne(ProjectEcosystemProfile::class, 'software_project_id');
     }
 
+    public function releaseChannels(): HasMany
+    { return $this->hasMany(ReleaseChannel::class, 'software_project_id'); }
+
     public function releases(): HasMany
     {
         return $this->hasMany(Release::class);

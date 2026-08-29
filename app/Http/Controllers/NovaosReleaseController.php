@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Release;
 use App\Models\SoftwareProject;
 use App\Services\ReleaseStorageService;
+use App\Services\ReleasePlatformService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -86,11 +87,12 @@ class NovaosReleaseController extends Controller
         return redirect()->route('admin.novaos.releases.index')->with('success', 'NOVAOS release updated.');
     }
 
-    public function toggle(Release $release)
+    public function toggle(Release $release, ReleasePlatformService $platform)
     {
         abort_unless($release->project?->slug === 'novaos', 404);
         $publish = !$release->is_published;
         $release->update(['is_published' => $publish, 'published_at' => $publish ? now() : null]);
+        if ($publish) { $platform->healthCheck($release); $platform->notify($release); }
         return back()->with('success', $publish ? 'NOVAOS release published.' : 'NOVAOS release unpublished.');
     }
 
