@@ -163,6 +163,12 @@ Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(func
 });
 Route::get('/api/v1/projects/{project:slug}/github', function(SoftwareProject $project){$repo=$project->githubRepository()->with(['contributors'=>fn($q)=>$q->orderByDesc('contributions')->limit(25),'issues'=>fn($q)=>$q->where('state','open')->orderByDesc('updated_at_github')->limit(20),'pullRequests'=>fn($q)=>$q->where('state','open')->orderByDesc('updated_at_github')->limit(20),'releases'=>fn($q)=>$q->orderByDesc('published_at_github')->limit(10)])->first(); return response()->json(['project'=>$project->only(['name','slug','github_url']),'repository'=>$repo]);})->middleware('throttle:60,1')->name('api.github.project');
 
+// Phase 5 — analytics.
+Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/analytics', [\App\Http\Controllers\AdminAnalyticsController::class, 'index'])->name('analytics.index');
+    Route::get('/analytics/projects/{project:slug}', [\App\Http\Controllers\AdminAnalyticsController::class, 'project'])->name('analytics.project');
+});
+
 // Phase 4 — release platform.
 Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/release-platform', [\App\Http\Controllers\AdminReleasePlatformController::class, 'index'])->name('release-platform.index');

@@ -21,6 +21,11 @@ class SoftwareProject extends Model
     public function releaseChannels(): HasMany
     { return $this->hasMany(ReleaseChannel::class, 'software_project_id'); }
 
+    public function analyticsEvents(): HasMany
+    {
+        return $this->hasMany(AnalyticsEvent::class, 'software_project_id');
+    }
+
     public function releases(): HasMany
     {
         return $this->hasMany(Release::class);

@@ -5,12 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\MarketplaceItem;
 use App\Models\SoftwareProject;
 use Illuminate\Http\Request;
+use App\Services\AnalyticsService;
 
 class MarketplaceController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, AnalyticsService $analytics)
     {
         $selectedProject = $request->filled('project') ? SoftwareProject::with('ecosystemProfile')->where('slug', $request->string('project'))->first() : null;
+
+        $analytics->track('marketplace_view', $selectedProject?->id, null, ['type'=>$request->string('type')->toString(),'category'=>$request->string('category')->toString()], $request);
 
         $items = MarketplaceItem::with('project.ecosystemProfile')
             ->where('is_published', true)
@@ -36,9 +39,10 @@ class MarketplaceController extends Controller
         return view('marketplace.index', compact('items', 'projects', 'types', 'capabilities', 'ecosystem', 'categories'));
     }
 
-    public function item(MarketplaceItem $item)
+    public function item(MarketplaceItem $item, AnalyticsService $analytics)
     {
         abort_unless($item->is_published, 404);
+        $analytics->track('marketplace_item_view', $item->software_project_id, $item, ['item_slug'=>$item->slug], request());
         $item->load(['project.ecosystemProfile','owner.publisherProfile','marketplaceReviews' => fn($q)=>$q->where('is_approved',true)->with('user')->latest(),'releases' => fn ($q) => $q->where('is_published', true)->latest('published_at')->latest('id')]);
         return view('marketplace.item', ['item'=>$item,'rating'=>app(\App\Services\MarketplaceService::class)->ratingSummary($item)]);
     }

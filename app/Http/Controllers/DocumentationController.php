@@ -7,11 +7,13 @@ use App\Models\SoftwareProject;
 use App\Support\DocumentationRenderer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use App\Services\AnalyticsService;
 
 class DocumentationController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, AnalyticsService $analytics)
     {
+        $analytics->track('documentation_index_view', null, null, [], $request);
         $projects = SoftwareProject::query()
             ->withCount(['documentationPages as published_docs_count' => fn ($q) => $q->where('is_published', true)])
             ->with(['releases' => fn ($q) => $q->where('is_published', true)->latest('published_at')])
@@ -22,11 +24,10 @@ class DocumentationController extends Controller
         return view('docs.index', compact('projects'));
     }
 
-    public function project(Request $request, SoftwareProject $project)
+    public function project(Request $request, SoftwareProject $project, AnalyticsService $analytics)
     {
-        $project->load([
-            'releases' => fn ($q) => $q->where('is_published', true)->latest('published_at')->latest('id'),
-        ]);
+        $analytics->track('project_view', $project->id, $project, [], $request);
+        $project->load(['releases' => fn ($q) => $q->where('is_published', true)->latest('published_at')->latest('id')]);
 
         $selectedRelease = $this->selectedRelease($request, $project);
         $releaseId = $selectedRelease?->id;
@@ -43,8 +44,9 @@ class DocumentationController extends Controller
         return view('docs.project', compact('project', 'firstPage', 'selectedRelease'));
     }
 
-    public function page(Request $request, SoftwareProject $project, string $pageSlug)
+    public function page(Request $request, SoftwareProject $project, string $pageSlug, AnalyticsService $analytics)
     {
+        $analytics->track('documentation_view', $project->id, null, ['page_slug'=>$pageSlug], $request);
         $project->load(['releases' => fn ($q) => $q->where('is_published', true)->latest('published_at')->latest('id')]);
         $selectedRelease = $this->selectedRelease($request, $project);
         $releaseId = $selectedRelease?->id;
@@ -77,9 +79,10 @@ class DocumentationController extends Controller
         return view('docs.page', compact('project', 'page', 'html', 'selectedRelease'));
     }
 
-    public function search(Request $request)
+    public function search(Request $request, AnalyticsService $analytics)
     {
         $term = trim((string) $request->string('q'));
+        if ($term !== '') $analytics->track('documentation_search', null, null, ['query'=>mb_substr($term,0,120)], $request);
         $results = collect();
         if ($term !== '') {
             $results = DocumentationPage::query()

@@ -9,6 +9,7 @@ use App\Models\ReleaseArtifact;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
+use App\Services\AnalyticsService;
 
 class UpdateController extends Controller
 {
@@ -174,7 +175,7 @@ class UpdateController extends Controller
         ]);
     }
 
-    public function download(Request $request, Release $release)
+    public function download(Request $request, Release $release, AnalyticsService $analytics)
     {
         abort_unless($release->is_published, 404);
 
@@ -193,6 +194,7 @@ class UpdateController extends Controller
 
         if ($artifact) $artifact->increment('downloads_count');
         else $release->increment('downloads_count');
+        $analytics->track('download', $release->software_project_id, $release, ['version'=>$release->version,'platform'=>$release->platform,'architecture'=>$release->architecture,'channel'=>$release->channel,'purpose'=>$purpose,'source'=>'api'], $request);
 
         return Storage::disk('releases')->download($path, $name, [
             'Content-Type' => 'application/octet-stream',
