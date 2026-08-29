@@ -1,0 +1,2 @@
+<?php
+namespace App\Models; use Illuminate\Database\Eloquent\Model; class EcosystemEdge extends Model {protected $fillable=['source_node_id','target_node_id','relationship','metadata']; protected $casts=['metadata'=>'array']; public function source(){return $this->belongsTo(EcosystemNode::class,'source_node_id');} public function target(){return $this->belongsTo(EcosystemNode::class,'target_node_id');}}

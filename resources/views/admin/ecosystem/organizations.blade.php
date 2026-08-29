@@ -1,0 +1,2 @@
+@extends('admin.layout')
+@section('content')<div class="admin-card"><h2>Developer Organizations</h2><table class="admin-table"><tr><th>Organization</th><th>Owner</th><th>Members</th><th>Projects</th></tr>@foreach($organizations as $o)<tr><td>{{ $o->name }}</td><td>{{ $o->owner->name }}</td><td>{{ $o->members_count }}</td><td>{{ $o->projects_count }}</td></tr>@endforeach</table>{{ $organizations->links() }}</div>@endsection

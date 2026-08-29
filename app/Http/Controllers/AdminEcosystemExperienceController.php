@@ -1,0 +1,11 @@
+<?php
+namespace App\Http\Controllers;
+use App\Models\{SoftwareProject,ProjectRoadmap,RoadmapItem,ProjectHealthMetric,Organization}; use App\Services\Ecosystem\{EcosystemGraphService,ProjectHealthService};
+class AdminEcosystemExperienceController extends Controller {
+ public function index(EcosystemGraphService $graph,ProjectHealthService $health){$projects=SoftwareProject::with('ecosystemProfile')->orderBy('name')->get();$healthData=$projects->mapWithKeys(fn($p)=>[$p->id=>$health->calculate($p)]);return view('admin.ecosystem.experience',compact('projects','healthData'));}
+ public function syncGraph(EcosystemGraphService $graph){$graph->syncProjectNodes();return back()->with('success','Ecosystem project graph synchronized.');}
+ public function saveMetric(\Illuminate\Http\Request $request,SoftwareProject $project){$data=$request->validate(['metric_key'=>'required|string|max:60','weight'=>'required|numeric|min:0|max:100','score'=>'required|integer|min:0|max:100']);ProjectHealthMetric::updateOrCreate(['software_project_id'=>$project->id,'metric_key'=>$data['metric_key']],$data);return back()->with('success','Health metric saved.');}
+ public function saveRoadmap(\Illuminate\Http\Request $request,SoftwareProject $project){$data=$request->validate(['title'=>'required|string|max:160','description'=>'nullable|string','status'=>'required|in:active,archived,planned']);$data['software_project_id']=$project->id;$data['sort_order']=ProjectRoadmap::where('software_project_id',$project->id)->max('sort_order')+1;ProjectRoadmap::create($data);return back()->with('success','Roadmap created.');}
+ public function saveRoadmapItem(\Illuminate\Http\Request $request,ProjectRoadmap $roadmap){$data=$request->validate(['title'=>'required|string|max:160','description'=>'nullable|string','status'=>'required|in:planned,in_progress,completed,cancelled','priority'=>'required|in:low,normal,high','target_version'=>'nullable|string|max:50','target_date'=>'nullable|date']);$data['project_roadmap_id']=$roadmap->id;$data['sort_order']=$roadmap->items()->max('sort_order')+1;RoadmapItem::create($data);return back()->with('success','Roadmap item added.');}
+ public function organizations(){return view('admin.ecosystem.organizations',['organizations'=>Organization::withCount(['members','projects'])->with('owner')->orderBy('name')->paginate(30)]);}
+}

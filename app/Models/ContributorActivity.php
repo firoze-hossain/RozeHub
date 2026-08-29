@@ -1,0 +1,2 @@
+<?php
+namespace App\Models; use Illuminate\Database\Eloquent\Model; class ContributorActivity extends Model {protected $fillable=['user_id','software_project_id','activity_type','source','external_id','points','metadata','occurred_at']; protected $casts=['metadata'=>'array','occurred_at'=>'datetime']; public function user(){return $this->belongsTo(User::class);} public function project(){return $this->belongsTo(SoftwareProject::class,'software_project_id');}}

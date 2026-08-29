@@ -1,0 +1,4 @@
+<?php
+namespace App\Services\Contributors;
+use App\Models\{ContributorScore,ContributorActivity,User};
+class ContributorScoreService { public function recalculate(User $user): ContributorScore { $a=ContributorActivity::where('user_id',$user->id);$activities=$a->get();$score=ContributorScore::firstOrNew(['user_id'=>$user->id]);$score->points=$activities->sum('points');$score->merged_prs=$activities->where('activity_type','merged_pr')->count();$score->issues=$activities->where('activity_type','issue')->count();$score->documentation=$activities->where('activity_type','documentation')->count();$score->marketplace_items=$activities->where('activity_type','marketplace')->count();$score->calculated_at=now();$score->save();return $score;} public function leaderboard(int $limit=50){return ContributorScore::with('user')->orderByDesc('points')->limit($limit)->get();}}

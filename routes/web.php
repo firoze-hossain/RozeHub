@@ -186,3 +186,22 @@ Route::middleware('auth')->prefix('api/v1')->group(function(){
     Route::post('/release-notifications/{notification}/read',[\App\Http\Controllers\ReleaseNotificationController::class,'read'])->name('api.release-notifications.read');
     Route::post('/release-notifications/read-all',[\App\Http\Controllers\ReleaseNotificationController::class,'readAll'])->name('api.release-notifications.read-all');
 });
+
+// Phase 6 — RozeHub ecosystem experience.
+Route::get('/ecosystem', [\App\Http\Controllers\EcosystemExperienceController::class, 'index'])->name('ecosystem.index');
+Route::get('/ecosystem/graph', [\App\Http\Controllers\EcosystemExperienceController::class, 'graph'])->name('ecosystem.graph');
+Route::get('/ecosystem/projects/{project:slug}', [\App\Http\Controllers\EcosystemExperienceController::class, 'project'])->name('ecosystem.project');
+Route::get('/ecosystem/projects/{project:slug}/roadmap', [\App\Http\Controllers\EcosystemExperienceController::class, 'roadmap'])->name('ecosystem.roadmap');
+Route::get('/search', [\App\Http\Controllers\EcosystemExperienceController::class, 'search'])->name('search');
+Route::get('/api/v1/search', [\App\Http\Controllers\EcosystemExperienceController::class, 'searchApi'])->middleware('throttle:60,1')->name('api.search');
+Route::get('/contributors', [\App\Http\Controllers\EcosystemExperienceController::class, 'leaderboard'])->name('contributors.index');
+Route::get('/organizations', [\App\Http\Controllers\EcosystemExperienceController::class, 'organizations'])->name('organizations.index');
+Route::get('/organizations/{organization:slug}', [\App\Http\Controllers\EcosystemExperienceController::class, 'organization'])->name('organizations.show');
+Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(function(){
+ Route::get('/ecosystem-experience', [\App\Http\Controllers\AdminEcosystemExperienceController::class,'index'])->name('ecosystem-experience.index');
+ Route::post('/ecosystem-experience/graph/sync', [\App\Http\Controllers\AdminEcosystemExperienceController::class,'syncGraph'])->name('ecosystem-experience.graph.sync');
+ Route::post('/ecosystem-experience/projects/{project}/metrics', [\App\Http\Controllers\AdminEcosystemExperienceController::class,'saveMetric'])->name('ecosystem-experience.metrics.save');
+ Route::post('/ecosystem-experience/projects/{project}/roadmaps', [\App\Http\Controllers\AdminEcosystemExperienceController::class,'saveRoadmap'])->name('ecosystem-experience.roadmaps.save');
+ Route::post('/ecosystem-experience/roadmaps/{roadmap}/items', [\App\Http\Controllers\AdminEcosystemExperienceController::class,'saveRoadmapItem'])->name('ecosystem-experience.roadmap-items.save');
+ Route::get('/organizations', [\App\Http\Controllers\AdminEcosystemExperienceController::class,'organizations'])->name('organizations.index');
+});
