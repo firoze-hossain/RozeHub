@@ -44,7 +44,12 @@
             <input name="vendor" value="{{ old('vendor',$item->vendor) }}" placeholder="Your name or organization">
         </label>
         <label>Category
-            <input name="category" value="{{ old('category',$item->category) }}" placeholder="Database">
+            <select name="category">
+                <option value="">Choose a project category</option>
+                @foreach($categories ?? [] as $cat)
+                    <option value="{{ $cat->name }}" @selected(old('category',$item->category)===$cat->name)>{{ $cat->name }}</option>
+                @endforeach
+            </select>
         </label>
         <label>License
             <select name="license">
@@ -118,6 +123,7 @@
                 'types' => $profile?->item_types ?? [],
                 'capabilities' => $profile?->capabilities ?? [],
                 'integrations' => $profile?->integration_targets ?? [],
+                'categories' => $p->marketplaceCategories->where('is_active',true)->sortBy('sort_order')->pluck('name')->values()->all(),
             ],
         ];
     })->toArray();
@@ -133,6 +139,7 @@ function renderEcosystem(){
     document.getElementById('ecosystem-kind').textContent=(e.kind||'ecosystem').replaceAll('_',' ').toUpperCase();
     typeSelect.innerHTML=e.types.map(t=>`<option value="${t}">${t.replaceAll('-',' ').replace(/\b\w/g,c=>c.toUpperCase())}</option>`).join('');
     if(e.types.includes(selectedType) && !typeSelect.dataset.changed) typeSelect.value=selectedType;
+    const categorySelect=document.querySelector('[name=category]'); if(categorySelect){ categorySelect.innerHTML='<option value="">Choose a project category</option>'+e.categories.map(c=>`<option value="${c}">${c}</option>`).join(''); }
     document.getElementById('capability-suggestions').innerHTML=e.capabilities.map(x=>`<button type="button" class="chip" onclick="appendLine('capabilities_text','${x}')">${x}</button>`).join('');
     document.getElementById('integration-suggestions').innerHTML=e.integrations.map(x=>`<button type="button" class="chip" onclick="appendLine('compatibility_text','${x}')">${x}</button>`).join('');
 }

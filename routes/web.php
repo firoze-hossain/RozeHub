@@ -74,6 +74,7 @@ Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(func
 // Public RozeHub Marketplace: plugins and extensions for desktop applications.
 Route::get('/marketplace', [\App\Http\Controllers\MarketplaceController::class, 'index'])->name('marketplace.index');
 Route::get('/marketplace/{item:slug}', [\App\Http\Controllers\MarketplaceController::class, 'item'])->name('marketplace.item');
+Route::middleware('auth')->post('/marketplace/{item:slug}/reviews', [\App\Http\Controllers\MarketplaceReviewController::class, 'store'])->name('marketplace.reviews.store');
 
 // Public marketplace API used by Lumina and DBNavigator.
 Route::get('/api/v1/marketplace/{project}', [\App\Http\Controllers\Api\MarketplaceController::class, 'index'])
@@ -84,6 +85,10 @@ Route::get('/api/v1/marketplace/releases/{release}/download', [\App\Http\Control
     ->middleware('throttle:30,1')->name('api.marketplace.download');
 
 Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/marketplace/categories', [\App\Http\Controllers\AdminMarketplaceCategoryController::class, 'index'])->name('marketplace.categories');
+    Route::post('/marketplace/categories', [\App\Http\Controllers\AdminMarketplaceCategoryController::class, 'store'])->name('marketplace.categories.store');
+    Route::put('/marketplace/categories/{category}', [\App\Http\Controllers\AdminMarketplaceCategoryController::class, 'update'])->name('marketplace.categories.update');
+    Route::delete('/marketplace/categories/{category}', [\App\Http\Controllers\AdminMarketplaceCategoryController::class, 'destroy'])->name('marketplace.categories.destroy');
     Route::get('/marketplace', [\App\Http\Controllers\AdminMarketplaceController::class, 'index'])->name('marketplace.index');
     Route::get('/marketplace/create', [\App\Http\Controllers\AdminMarketplaceController::class, 'create'])->name('marketplace.create');
     Route::post('/marketplace', [\App\Http\Controllers\AdminMarketplaceController::class, 'store'])->name('marketplace.store');
@@ -109,6 +114,8 @@ Route::post('/developer/register', [\App\Http\Controllers\DeveloperAuthControlle
 Route::middleware('auth')->prefix('developer')->name('developer.')->group(function () {
     Route::post('/logout', [\App\Http\Controllers\DeveloperAuthController::class, 'logout'])->name('logout');
     Route::get('/', [\App\Http\Controllers\DeveloperMarketplaceController::class, 'dashboard'])->name('dashboard');
+    Route::get('/publisher', [\App\Http\Controllers\DeveloperPublisherController::class, 'edit'])->name('publisher.edit');
+    Route::put('/publisher', [\App\Http\Controllers\DeveloperPublisherController::class, 'update'])->name('publisher.update');
     Route::get('/notifications', [\App\Http\Controllers\DeveloperMarketplaceController::class, 'notifications'])->name('notifications');
     Route::patch('/notifications/{notification}/read', [\App\Http\Controllers\DeveloperMarketplaceController::class, 'readNotification'])->name('notifications.read');
     Route::get('/marketplace/create', [\App\Http\Controllers\DeveloperMarketplaceController::class, 'create'])->name('marketplace.create');

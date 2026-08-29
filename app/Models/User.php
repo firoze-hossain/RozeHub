@@ -30,4 +30,6 @@ class User extends Authenticatable
             'is_admin' => 'boolean',
         ];
     }
+    public function publisherProfile() { return $this->hasOne(\App\Models\PublisherProfile::class); }
+    public function marketplaceReviews() { return $this->hasMany(\App\Models\MarketplaceReview::class); }
 }

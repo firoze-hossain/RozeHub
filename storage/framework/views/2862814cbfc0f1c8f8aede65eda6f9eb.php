@@ -7,4 +7,4 @@
 </tbody></table></div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('admin.layout', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/firoze/Documents/RozeHub-Phase1-Architecture-Foundation-FIXED/resources/views/admin/ecosystem/index.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('admin.layout', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/firoze/Downloads/RozeHub-Phase2-Professional-Marketplace/RozeHub-Phase1-Architecture-Foundation-FIXED/resources/views/admin/ecosystem/index.blade.php ENDPATH**/ ?>

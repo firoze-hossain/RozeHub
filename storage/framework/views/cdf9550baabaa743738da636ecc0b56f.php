@@ -43,7 +43,12 @@
             <input name="vendor" value="<?php echo e(old('vendor',$item->vendor)); ?>" placeholder="Your name or organization">
         </label>
         <label>Category
-            <input name="category" value="<?php echo e(old('category',$item->category)); ?>" placeholder="Database">
+            <select name="category">
+                <option value="">Choose a project category</option>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $categories ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                    <option value="<?php echo e($cat->name); ?>" <?php if(old('category',$item->category)===$cat->name): echo 'selected'; endif; ?>><?php echo e($cat->name); ?></option>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+            </select>
         </label>
         <label>License
             <select name="license">
@@ -117,6 +122,7 @@
                 'types' => $profile?->item_types ?? [],
                 'capabilities' => $profile?->capabilities ?? [],
                 'integrations' => $profile?->integration_targets ?? [],
+                'categories' => $p->marketplaceCategories->where('is_active',true)->sortBy('sort_order')->pluck('name')->values()->all(),
             ],
         ];
     })->toArray();
@@ -132,6 +138,7 @@ function renderEcosystem(){
     document.getElementById('ecosystem-kind').textContent=(e.kind||'ecosystem').replaceAll('_',' ').toUpperCase();
     typeSelect.innerHTML=e.types.map(t=>`<option value="${t}">${t.replaceAll('-',' ').replace(/\b\w/g,c=>c.toUpperCase())}</option>`).join('');
     if(e.types.includes(selectedType) && !typeSelect.dataset.changed) typeSelect.value=selectedType;
+    const categorySelect=document.querySelector('[name=category]'); if(categorySelect){ categorySelect.innerHTML='<option value="">Choose a project category</option>'+e.categories.map(c=>`<option value="${c}">${c}</option>`).join(''); }
     document.getElementById('capability-suggestions').innerHTML=e.capabilities.map(x=>`<button type="button" class="chip" onclick="appendLine('capabilities_text','${x}')">${x}</button>`).join('');
     document.getElementById('integration-suggestions').innerHTML=e.integrations.map(x=>`<button type="button" class="chip" onclick="appendLine('compatibility_text','${x}')">${x}</button>`).join('');
 }
@@ -141,4 +148,4 @@ renderEcosystem();
 </script>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('developer.layout',['title'=>($mode==='create'?'Create':'Edit').' Marketplace Item · RozeHub'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/firoze/Documents/RozeHub-Phase1-Architecture-Foundation-FIXED/resources/views/developer/marketplace/item-form.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('developer.layout',['title'=>($mode==='create'?'Create':'Edit').' Marketplace Item · RozeHub'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/firoze/Downloads/RozeHub-Phase2-Professional-Marketplace/RozeHub-Phase1-Architecture-Foundation-FIXED/resources/views/developer/marketplace/item-form.blade.php ENDPATH**/ ?>

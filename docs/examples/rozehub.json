@@ -1,0 +1,13 @@
+{
+  "schema": "1.0",
+  "id": "com.roze.example.extension",
+  "name": "Example Extension",
+  "version": "1.0.0",
+  "type": "plugin",
+  "dependencies": {
+    "com.roze.dbnavigator.core": ">=2.0.0"
+  },
+  "optionalDependencies": {
+    "com.roze.dbnavigator.ai": "^1.0.0"
+  }
+}

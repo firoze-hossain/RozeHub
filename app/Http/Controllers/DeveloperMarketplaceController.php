@@ -63,6 +63,7 @@ class DeveloperMarketplaceController extends Controller
         return view('developer.marketplace.item-form', [
             'projects' => $projects,
             'item' => new MarketplaceItem(['item_type' => $defaultType]),
+            'categories' => $first?->marketplaceCategories()->where('is_active',true)->orderBy('sort_order')->get() ?? collect(),
             'mode' => 'create',
         ]);
     }
@@ -72,6 +73,7 @@ class DeveloperMarketplaceController extends Controller
         $data = $request->validated();
         $project = $this->marketplace->projectForMarketplace((int)$data['software_project_id'], true);
         $this->marketplace->assertItemAllowed($project, $data['item_type']);
+        $this->marketplace->assertCategoryAllowed($project, $data['category'] ?? null);
 
         $meta = $this->marketplace->itemPayload($request);
         $item = MarketplaceItem::create(array_merge($data, $meta, [
@@ -94,6 +96,7 @@ class DeveloperMarketplaceController extends Controller
         return view('developer.marketplace.item-form', [
             'projects' => $this->projects(),
             'item' => $item,
+            'categories' => $item->project?->marketplaceCategories()->where('is_active',true)->orderBy('sort_order')->get() ?? collect(),
             'mode' => 'edit',
         ]);
     }
@@ -104,6 +107,7 @@ class DeveloperMarketplaceController extends Controller
         $data = $request->validated();
         $project = $this->marketplace->projectForMarketplace((int)$data['software_project_id'], true);
         $this->marketplace->assertItemAllowed($project, $data['item_type']);
+        $this->marketplace->assertCategoryAllowed($project, $data['category'] ?? null);
 
         if ($item->releases()->exists() && (int) $item->software_project_id !== (int) $project->id) {
             return back()->withErrors(['software_project_id' => 'The target project cannot be changed after a release has been created. Create a new marketplace item instead.']);
@@ -164,12 +168,17 @@ class DeveloperMarketplaceController extends Controller
                 throw ValidationException::withMessages(['package' => $e->getMessage()]);
             }
 
+            [$inspection, $manifest] = $this->marketplace->inspectStoredPackage($package['file_path'], $item, $data);
             $existing->update(array_merge($data, $package, [
                 'is_published' => false,
                 'is_mandatory' => $request->boolean('is_mandatory'),
                 'published_at' => null,
                 'dependencies' => $this->dependencies($request),
+                'manifest' => $manifest,
+                'manifest_version' => (string)($manifest['schema'] ?? '1.0'),
+                'package_format' => $inspection['format'] ?? $data['package_type'],
             ]));
+            $this->marketplace->syncDependencies($existing, $manifest);
             if ($oldPath && $oldPath !== $existing->file_path) $this->storage->delete($oldPath);
 
             return redirect()->route('developer.marketplace.release.edit', $existing)->with('success', 'Existing draft updated.');
@@ -181,6 +190,7 @@ class DeveloperMarketplaceController extends Controller
             throw ValidationException::withMessages(['package' => $e->getMessage()]);
         }
 
+        [$inspection, $manifest] = $this->marketplace->inspectStoredPackage($package['file_path'], $item, $data);
         try {
             $release = MarketplaceRelease::create(array_merge($data, $package, [
                 'marketplace_item_id' => $item->id,
@@ -188,7 +198,11 @@ class DeveloperMarketplaceController extends Controller
                 'is_mandatory' => $request->boolean('is_mandatory'),
                 'published_at' => null,
                 'dependencies' => $this->dependencies($request),
+                'manifest' => $manifest,
+                'manifest_version' => (string)($manifest['schema'] ?? '1.0'),
+                'package_format' => $inspection['format'] ?? $data['package_type'],
             ]));
+            $this->marketplace->syncDependencies($release, $manifest);
         } catch (\Illuminate\Database\QueryException $e) {
             if ((string) $e->getCode() === '23000') {
                 if (!empty($package['file_path'])) $this->storage->delete($package['file_path']);
@@ -220,7 +234,14 @@ class DeveloperMarketplaceController extends Controller
             catch (Throwable $e) { throw ValidationException::withMessages(['package' => $e->getMessage()]); }
         }
         unset($data['package'], $data['upload_token']);
+        if ($release->file_path) {
+            [$inspection, $manifest] = $this->marketplace->inspectStoredPackage($release->file_path, $release->item, $data);
+            $data['manifest'] = $manifest;
+            $data['manifest_version'] = (string)($manifest['schema'] ?? '1.0');
+            $data['package_format'] = $inspection['format'] ?? $data['package_type'];
+        }
         $release->update(array_merge($data, ['is_published' => false, 'published_at' => null, 'dependencies' => $this->dependencies($request)]));
+        if ($release->manifest) $this->marketplace->syncDependencies($release, $release->manifest);
         if ($old && $old !== $release->file_path) $this->storage->delete($old);
         $release->submissions()->whereIn('status', [MarketplaceSubmission::SUBMITTED, MarketplaceSubmission::UNDER_REVIEW])->update(['status' => MarketplaceSubmission::DRAFT]);
         return back()->with('success', 'Release updated and kept unpublished. Submit it again for review.');

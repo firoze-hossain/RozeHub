@@ -8,10 +8,10 @@ class MarketplaceReleaseRequest extends FormRequest
     public function authorize(): bool { return auth()->check(); }
     public function rules(): array {
         return [
-            'version'=>['required','string','max:80'], 'platform'=>['required','string','max:30'], 'architecture'=>['required','string','max:20'],
+            'version'=>['required','string','regex:/^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/','max:80'], 'platform'=>['required','string','max:30'], 'architecture'=>['required','string','max:20'],
             'channel'=>['required','string','max:30'], 'minimum_app_version'=>['nullable','string','max:80'], 'maximum_app_version'=>['nullable','string','max:80'],
             'package_type'=>['required','string','max:30'], 'release_notes'=>['nullable','string','max:30000'],
-            'is_mandatory'=>['nullable','boolean'], 'package'=>['nullable','file','max:8388608'],
+            'dependencies_text'=>['nullable','string','max:10000'], 'is_mandatory'=>['nullable','boolean'], 'package'=>['nullable','file','max:8388608'],
             'upload_token'=>['nullable','string','regex:/^[A-Za-z0-9_-]{20,100}$/'],
         ];
     }

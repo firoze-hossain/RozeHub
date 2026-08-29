@@ -7,12 +7,13 @@ use App\Models\MarketplaceSubmission;
 use App\Models\MarketplaceSubmissionRisk;
 use App\Services\MarketplaceModerationService;
 use App\Services\MarketplaceRiskService;
+use App\Services\MarketplaceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class AdminMarketplaceReviewController extends Controller
 {
-    public function __construct(private readonly MarketplaceModerationService $moderation, private readonly MarketplaceRiskService $risk) {}
+    public function __construct(private readonly MarketplaceModerationService $moderation, private readonly MarketplaceRiskService $risk, private readonly MarketplaceService $marketplace) {}
 
     public function index(Request $request)
     {
@@ -87,6 +88,14 @@ class AdminMarketplaceReviewController extends Controller
         }
 
         if($submission->status!=='UNDER_REVIEW')return back()->withErrors(['decision'=>'This submission is not currently awaiting an administrator decision.']);
+
+        if ($data['decision'] === 'approve') {
+            $submission->loadMissing('release');
+            if ($submission->release) {
+                $dependencyProblems = $this->marketplace->dependencyCheck($submission->release);
+                if ($dependencyProblems) return back()->withErrors(['decision'=>'Cannot approve this release until dependencies are satisfied: '.implode('; ', $dependencyProblems)]);
+            }
+        }
 
         $target=match($data['decision']){'needs_changes'=>MarketplaceSubmission::NEEDS_CHANGES,'reject'=>MarketplaceSubmission::REJECTED,'approve'=>MarketplaceSubmission::APPROVED};
         $labels = [

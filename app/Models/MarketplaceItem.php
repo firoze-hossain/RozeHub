@@ -22,7 +22,7 @@ class MarketplaceItem extends Model
         'repository_url', 'support_url', 'license',
         'summary',
         'description',
-        'permissions', 'capabilities', 'compatibility',
+        'permissions', 'capabilities', 'compatibility', 'manifest', 'manifest_version',
         'is_official',
         'is_verified',
         'is_published',
@@ -34,6 +34,7 @@ class MarketplaceItem extends Model
             'permissions' => 'array',
             'capabilities' => 'array',
             'compatibility' => 'array',
+            'manifest' => 'array',
             'is_official' => 'boolean',
             'is_verified' => 'boolean',
             'is_published' => 'boolean',
@@ -59,6 +60,10 @@ class MarketplaceItem extends Model
     {
         return $this->hasMany(MarketplaceRelease::class);
     }
+
+    public function publisherProfile() { return $this->hasOne(PublisherProfile::class, 'user_id', 'owner_user_id'); }
+
+    public function marketplaceReviews(): HasMany { return $this->hasMany(MarketplaceReview::class, 'marketplace_item_id'); }
 
     public function publishedReleases(): HasMany
     {

@@ -33,6 +33,8 @@ class SoftwareProject extends Model
         return $this->hasMany(DocumentationPage::class, 'software_project_id');
     }
 
+    public function marketplaceCategories(): HasMany { return $this->hasMany(MarketplaceCategory::class, 'software_project_id'); }
+
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);

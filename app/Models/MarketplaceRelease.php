@@ -23,7 +23,7 @@ class MarketplaceRelease extends Model
         'sha256',
         'release_identity_hash',
         'release_notes',
-        'dependencies',
+        'dependencies', 'manifest', 'manifest_version', 'package_format',
         'is_mandatory',
         'is_published',
         'published_at',
@@ -47,6 +47,7 @@ class MarketplaceRelease extends Model
     {
         return [
             'dependencies' => 'array',
+            'manifest' => 'array',
             'is_mandatory' => 'boolean',
             'is_published' => 'boolean',
             'published_at' => 'datetime',

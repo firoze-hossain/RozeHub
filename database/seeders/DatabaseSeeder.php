@@ -177,6 +177,23 @@ class DatabaseSeeder extends Seeder
             );
         }
 
+        // Project-specific marketplace taxonomies. Add/edit these from the admin Categories screen.
+        $categoryMap = [
+            'dbnavigator' => ['Drivers','SQL Tools','Import & Export','Data Tools','Themes'],
+            'thundercall' => ['Protocols','Authentication','Workflows','Testing','Integrations'],
+            'stratosdb' => ['Storage','Indexes','Functions','Query Tools','Drivers'],
+            'lumina' => ['Language Support','Debuggers','Build Tools','Themes','Integrations'],
+            'roze-language' => ['Libraries','Modules','Compiler Tools','Testing','Integrations'],
+            'trackeye' => ['Connectors','Reports','Automation','Compliance','Integrations'],
+            'novaos' => ['Applications','System Components','Drivers','Services','Desktop','Themes'],
+        ];
+        foreach ($categoryMap as $slug => $names) {
+            $project = SoftwareProject::where('slug',$slug)->first(); if (!$project) continue;
+            foreach ($names as $order => $name) {
+                \App\Models\MarketplaceCategory::updateOrCreate(['software_project_id'=>$project->id,'slug'=>\Illuminate\Support\Str::slug($name)], ['name'=>$name,'sort_order'=>$order,'is_active'=>true]);
+            }
+        }
+
         $this->call(DocumentationSeeder::class);
 
         $navigator = SoftwareProject::where('slug', 'dbnavigator')->first();
