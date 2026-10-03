@@ -28,23 +28,19 @@ class UpdateController extends Controller
         $channel = $this->normalizeChannel($data['channel'] ?? 'Stable');
         $current = ltrim(trim($data['version']), 'vV');
 
-        $releases = Cache::remember(
-            "rozehub:update-releases:{$project->id}:{$platform}:{$architecture}:{$channel}",
-            now()->addSeconds(30),
-            fn () => Release::query()
-                ->where('software_project_id', $project->id)
-                ->where('platform', $platform)
-                ->where('architecture', $architecture)
-                ->where('channel', $channel)
-                ->where('is_published', true)
-                ->whereIn('processing_status', ['READY','PROCESSING'])
-                ->whereIn('health_status', ['HEALTHY','UNKNOWN'])
-                ->whereNotNull('file_path')
-                ->whereNotNull('file_name')
-                ->orderByDesc('published_at')
-                ->orderByDesc('id')
-                ->get()
-        );
+        $releases = Release::query()
+            ->where('software_project_id', $project->id)
+            ->where('platform', $platform)
+            ->where('architecture', $architecture)
+            ->where('channel', $channel)
+            ->where('is_published', true)
+            ->whereIn('processing_status', ['READY','PROCESSING'])
+            ->whereIn('health_status', ['HEALTHY','UNKNOWN'])
+            ->whereNotNull('file_path')
+            ->whereNotNull('file_name')
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->get();
 
         $latest = $releases
             ->filter(fn (Release $release) => $this->eligibleForRollout($release, $data['client_id'] ?? null))
