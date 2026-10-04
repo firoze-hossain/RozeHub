@@ -26,6 +26,7 @@ class AdminMarketplaceController extends Controller
     public function index(Request $request)
     {
         $items = MarketplaceItem::with('project')
+            ->withCount('releases')
             ->when($request->filled('project'), fn ($q) => $q->where('software_project_id', $request->integer('project')))
             ->when($request->filled('type'), fn ($q) => $q->where('item_type', $request->string('type')))
             ->when($request->filled('q'), fn ($q) => $q->where(function ($inner) use ($request) {
@@ -34,9 +35,17 @@ class AdminMarketplaceController extends Controller
             }))
             ->latest('id')->paginate(15)->withQueryString();
 
+        $stats = [
+            'total_items' => MarketplaceItem::count(),
+            'total_downloads' => (int) MarketplaceItem::sum('downloads_count'),
+            'official_count' => MarketplaceItem::where('is_official', true)->count(),
+            'verified_count' => MarketplaceItem::where('is_verified', true)->count(),
+        ];
+
         return view('admin.marketplace.index', [
             'items' => $items,
             'projects' => SoftwareProject::with('ecosystemProfile')->orderBy('name')->get(),
+            'stats' => $stats,
         ]);
     }
 
