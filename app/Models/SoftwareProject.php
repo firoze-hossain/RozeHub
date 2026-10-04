@@ -52,4 +52,9 @@ class SoftwareProject extends Model
     {
         return $this->hasOne(GithubRepository::class, 'software_project_id');
     }
+
+    public function roadmaps(): HasMany
+    {
+        return $this->hasMany(ProjectRoadmap::class, 'software_project_id')->with('items');
+    }
 }
