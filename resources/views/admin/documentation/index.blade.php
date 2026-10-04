@@ -1,4 +1,8 @@
 @extends('admin.layout')
+@php
+    $heading = 'Documentation Library';
+    $title = 'Documentation Library · RozeHub Admin';
+@endphp
 @section('content')
 <div class="admin-page-head"><div><span>DOCUMENTATION CONTROL</span><h2>Documentation library</h2><p>Maintain online guides, references, tutorials, architecture notes, and release documentation for every RozeHub project.</p></div></div>
 <div class="admin-doc-callout"><div><strong>One documentation system for the whole ecosystem.</strong><p>NOVAOS, Roze, and StratosDB start with deep technical guides. The other products use the same editor and can be expanded without code changes.</p></div><a class="admin-primary" href="{{ route('docs.index') }}">View public docs ↗</a></div>

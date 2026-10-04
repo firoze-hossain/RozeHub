@@ -76,7 +76,11 @@ class AdminDocumentationController extends Controller
     {
         $sections = $project->documentationSections()->orderBy('sort_order')->get();
         $releases = $project->releases()->orderByDesc('published_at')->orderByDesc('id')->get();
-        $page = new DocumentationPage(['kind'=>'guide','is_published'=>true]);
+        $page = new DocumentationPage([
+            'kind' => 'guide',
+            'is_published' => true,
+            'documentation_section_id' => request('section_id'),
+        ]);
         return view('admin.documentation.page-form', compact('project','sections','releases','page'))->with('mode','create');
     }
 
