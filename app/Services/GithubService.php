@@ -6,7 +6,13 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use RuntimeException;
 class GithubService {
- public function client():PendingRequest { $req=Http::acceptJson()->timeout((int)config('github.timeout',15))->retry(2,250); if($token=config('github.token')) $req=$req->withToken($token); return $req; }
+ public function client():PendingRequest {
+    $req=Http::acceptJson()->withHeaders(['User-Agent'=>'RozeHub/1.0'])->timeout((int)config('github.timeout',15))->retry(2,250);
+    if($token=config('github.token')) $req=$req->withToken($token);
+    $ca=config('github.ca_bundle') ?: (file_exists('C:/php/cacert.pem') ? 'C:/php/cacert.pem' : (file_exists('C:/Program Files/Git/mingw64/etc/ssl/certs/ca-bundle.crt') ? 'C:/Program Files/Git/mingw64/etc/ssl/certs/ca-bundle.crt' : null));
+    if($ca) $req=$req->withOptions(['verify'=>$ca]);
+    return $req;
+ }
  public function parseRepositoryUrl(?string $url):?array { if(!$url)return null; $p=parse_url(trim($url)); if(($p['host']??'')!=='github.com')return null; $parts=array_values(array_filter(explode('/',trim($p['path']??'','/')))); if(count($parts)<2)return null; return ['owner'=>$parts[0],'name'=>preg_replace('/\\.git$/','',$parts[1])]; }
  public function repository(SoftwareProject $project):?GithubRepository { $repo=$this->parseRepositoryUrl($project->github_url); if(!$repo)return null; return GithubRepository::where('software_project_id',$project->id)->first() ?: $this->sync($project); }
  public function sync(SoftwareProject $project):GithubRepository { $parts=$this->parseRepositoryUrl($project->github_url); if(!$parts) throw new RuntimeException('This project does not have a valid GitHub repository URL.'); $base="repos/{$parts['owner']}/{$parts['name']}"; $r=$this->get($base); $data=$r->json(); if(!is_array($data)||empty($data['full_name'])) throw new RuntimeException('GitHub returned an invalid repository response.'); $repo=GithubRepository::updateOrCreate(['software_project_id'=>$project->id],$this->repositoryData($project,$data)); $this->syncContributors($repo,$base); $this->syncIssues($repo,$base); $this->syncPullRequests($repo,$base); $this->syncReleases($repo,$base); $repo->update(['synced_at'=>now()]); return $repo->fresh(); }
