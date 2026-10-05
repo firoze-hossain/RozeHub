@@ -792,3 +792,350 @@
     }
 }
 
+/* ==========================================================================
+   Release Form & Artifact Inspector (Admin)
+   ========================================================================== */
+.release-admin-hero {
+    background: linear-gradient(135deg, #071714 0%, #0e2720 50%, #15392e 100%);
+    border: 1px solid rgba(102, 221, 174, 0.22);
+    box-shadow: 0 16px 40px -12px rgba(10, 30, 24, 0.35);
+    border-radius: 20px;
+    padding: 28px 32px;
+    color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+}
+.release-admin-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 85% 15%, rgba(102, 221, 174, 0.16) 0%, transparent 60%);
+    pointer-events: none;
+}
+.release-hero-main {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    min-width: 0;
+}
+.release-hero-logo {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: #0b221a;
+    border: 1px solid rgba(102, 221, 174, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.release-hero-logo img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
+.release-hero-monogram {
+    font-size: 20px;
+    font-weight: 800;
+    color: #66ddae;
+}
+.release-hero-meta {
+    min-width: 0;
+}
+.release-hero-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 9.5px;
+    letter-spacing: 1.4px;
+    color: #6ee0b0;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+.release-hero-title {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.6px;
+    color: #ffffff;
+    margin: 0 0 6px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.release-version-pill {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 13px;
+    font-weight: 750;
+    background: rgba(102, 221, 174, 0.18);
+    color: #72f7c2;
+    padding: 3px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(102, 221, 174, 0.3);
+}
+.release-hero-desc {
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: #b9d6ca;
+    margin: 0;
+    max-width: 660px;
+}
+.release-hero-side {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    flex-shrink: 0;
+}
+.badge-channel {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.badge-channel.stable {
+    background: #d8f0e1;
+    color: #146243;
+}
+.badge-channel.beta {
+    background: #e3ecff;
+    color: #2b5cb8;
+}
+.badge-channel.nightly {
+    background: #f1e4fb;
+    color: #7b3bb5;
+}
+
+/* Artifact Inspector Card */
+.artifact-inspector-box {
+    background: #f6fbf8;
+    border: 1px solid #cce4d6;
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-top: 14px;
+}
+.artifact-inspector-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+.artifact-inspector-file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 750;
+    color: #102e24;
+}
+.artifact-inspector-size {
+    font-size: 11px;
+    font-weight: 700;
+    background: #e1f2e8;
+    color: #1a6549;
+    padding: 2px 7px;
+    border-radius: 6px;
+}
+.artifact-inspector-hash {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 11px;
+    color: #4b665c;
+    margin: 4px 0;
+}
+.artifact-inspector-hash code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    color: #15553e;
+    background: #ffffff;
+    padding: 2px 6px;
+    border-radius: 5px;
+    border: 1px solid #d2e5da;
+    word-break: break-all;
+}
+.artifact-inspector-path {
+    font-size: 10.5px;
+    color: #657e74;
+    margin-top: 4px;
+}
+.artifact-inspector-path code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color: #3b574d;
+}
+
+/* Modern Dropzone & File Input */
+.modern-dropzone {
+    border: 1.5px dashed #c0d8cb;
+    background: #fbfdfc;
+    border-radius: 12px;
+    padding: 22px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.modern-dropzone:hover {
+    border-color: #1d7758;
+    background: #f2f9f5;
+}
+.modern-dropzone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 5;
+}
+.dropzone-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #e8f5ed;
+    color: #1d7758;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+.dropzone-title {
+    font-size: 13px;
+    font-weight: 750;
+    color: #132b23;
+    margin-bottom: 3px;
+}
+.dropzone-sub {
+    font-size: 11px;
+    color: var(--admin-muted);
+}
+.dropzone-selected-file {
+    display: none;
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #176549;
+    background: #e6f6ee;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid #bfe8d4;
+}
+
+/* Artifact Cards */
+.release-artifact-card {
+    background: #ffffff;
+    border: 1px solid var(--admin-line);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 4px rgba(16, 34, 30, 0.03);
+}
+.release-artifact-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #edf2ee;
+}
+.release-artifact-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 14px;
+    font-weight: 800;
+    color: #10251f;
+}
+.release-artifact-badge {
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 999px;
+}
+.release-artifact-badge.installer {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+}
+.release-artifact-badge.updater {
+    background: #f5f3ff;
+    color: #6d28d9;
+    border: 1px solid #ddd6fe;
+}
+
+/* Toggle card for Release Publish */
+.release-publish-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: #f7faf8;
+    border: 1px solid #d4ded8;
+    border-radius: 14px;
+    padding: 18px 22px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    user-select: none;
+    margin-top: 20px;
+}
+.release-publish-box:hover {
+    border-color: #2e8b6e;
+    background: #f1f8f4;
+}
+.release-publish-box.is-published {
+    background: #eef8f2;
+    border-color: #248b64;
+    box-shadow: 0 2px 8px rgba(29, 119, 88, 0.08);
+}
+.release-publish-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.release-publish-title {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #10261f;
+    margin-bottom: 3px;
+}
+.release-publish-sub {
+    font-size: 11.5px;
+    color: #556c63;
+    margin: 0;
+}
+
+@media (max-width: 960px) {
+    .release-admin-hero {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 22px 20px;
+    }
+    .release-hero-side {
+        align-items: flex-start;
+    }
+}
+
+
