@@ -17,4 +17,36 @@ class EcosystemProfileRequest extends FormRequest
             'marketplace_enabled'=>['nullable','boolean'], 'community_contributions'=>['nullable','boolean'], 'moderation_required'=>['nullable','boolean'],
         ];
     }
+
+    protected function prepareForValidation(): void
+    {
+        $listKeys = ['item_types','capabilities','package_types','platforms','architectures','channels','integration_targets'];
+        $merge = [];
+        foreach ($listKeys as $key) {
+            $val = $this->input($key);
+            if (is_array($val)) {
+                $flat = [];
+                foreach ($val as $item) {
+                    if (is_string($item)) {
+                        $lines = preg_split('/[\r\n,]+/', $item, -1, PREG_SPLIT_NO_EMPTY);
+                        foreach ($lines as $line) {
+                            $trimmed = trim($line);
+                            if ($trimmed !== '') {
+                                $flat[] = $trimmed;
+                            }
+                        }
+                    } elseif (is_numeric($item)) {
+                        $flat[] = (string)$item;
+                    }
+                }
+                $merge[$key] = array_values(array_unique($flat));
+            } elseif (is_string($val)) {
+                $lines = preg_split('/[\r\n,]+/', $val, -1, PREG_SPLIT_NO_EMPTY);
+                $merge[$key] = array_values(array_unique(array_filter(array_map('trim', $lines))));
+            }
+        }
+        if (!empty($merge)) {
+            $this->merge($merge);
+        }
+    }
 }

@@ -340,3 +340,455 @@
 
 /* Dynamic ecosystem marketplace fields */
 .ecosystem-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.chip-list{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.chip{border:1px solid #ccd8d4;background:#fff;padding:5px 8px;font:11px ui-monospace,monospace;color:#24443b;cursor:pointer}.chip:hover{background:#eef6f2}@media(max-width:760px){.ecosystem-grid{grid-template-columns:1fr}}
+
+/* ==========================================================================
+   Ecosystem Policy Workspace (Admin)
+   ========================================================================== */
+.eco-admin-hero {
+    background: linear-gradient(135deg, #091713 0%, #112821 50%, #1a3c32 100%);
+    border: 1px solid rgba(102, 221, 174, 0.22);
+    box-shadow: 0 16px 40px -12px rgba(10, 30, 24, 0.35);
+    border-radius: 20px;
+    padding: 28px 32px;
+    color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+}
+.eco-admin-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 85% 15%, rgba(102, 221, 174, 0.15) 0%, transparent 60%);
+    pointer-events: none;
+}
+.eco-hero-main {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    min-width: 0;
+}
+.eco-hero-logo {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    background: #0d221c;
+    border: 1px solid rgba(102, 221, 174, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.eco-hero-logo img {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+}
+.eco-hero-monogram {
+    font-size: 20px;
+    font-weight: 800;
+    color: #66ddae;
+}
+.eco-hero-meta {
+    min-width: 0;
+}
+.eco-hero-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 9.5px;
+    letter-spacing: 1.4px;
+    color: #6ee0b0;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+.eco-hero-title {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.6px;
+    color: #ffffff;
+    margin: 0 0 6px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.eco-hero-cat-tag {
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    background: rgba(255, 255, 255, 0.12);
+    color: #d1f5e5;
+    padding: 3px 9px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.eco-hero-desc {
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: #b9d6ca;
+    margin: 0;
+    max-width: 660px;
+}
+.eco-hero-side {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    flex-shrink: 0;
+}
+.eco-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+.eco-badge-pill.active {
+    background: #14593f;
+    color: #6ee0b0;
+    border: 1px solid #268763;
+}
+.eco-badge-pill.inactive {
+    background: #412320;
+    color: #f7a399;
+    border: 1px solid #753b34;
+}
+.eco-hero-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #9fe2c7;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+.eco-hero-link:hover {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+/* Sections & Cards */
+.eco-policy-grid {
+    display: grid;
+    gap: 20px;
+}
+.eco-section-card {
+    background: #ffffff;
+    border: 1px solid var(--admin-line);
+    border-radius: 18px;
+    padding: 26px 28px;
+    box-shadow: 0 2px 8px rgba(16, 34, 30, 0.04);
+}
+.eco-section-head {
+    border-bottom: 1px solid #edf2ee;
+    padding-bottom: 14px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+}
+.eco-section-eyebrow {
+    font-size: 9.5px;
+    font-weight: 850;
+    letter-spacing: 1.2px;
+    color: var(--admin-green);
+    text-transform: uppercase;
+    margin-bottom: 3px;
+}
+.eco-section-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--admin-ink);
+    margin: 0;
+}
+.eco-section-desc {
+    font-size: 11.5px;
+    color: var(--admin-muted);
+    margin: 0;
+}
+
+/* Governance Toggles */
+.eco-governance-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+}
+.eco-toggle-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: #f8faf8;
+    border: 1px solid #dce5df;
+    border-radius: 14px;
+    padding: 18px 16px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    user-select: none;
+}
+.eco-toggle-box:hover {
+    border-color: #34a87c;
+    background: #f2f9f5;
+}
+.eco-toggle-box.is-selected {
+    background: #edf8f2;
+    border-color: #248b64;
+    box-shadow: 0 2px 8px rgba(29, 119, 88, 0.09);
+}
+.eco-toggle-checkbox {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    accent-color: #1d7758;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.eco-toggle-content {
+    min-width: 0;
+    flex: 1;
+}
+.eco-toggle-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #132b23;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.eco-toggle-text {
+    font-size: 11px;
+    line-height: 1.5;
+    color: #556b63;
+    margin: 0;
+}
+
+/* Fields & Layouts */
+.eco-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+.eco-4col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+.eco-field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 18px;
+}
+.eco-field:last-child {
+    margin-bottom: 0;
+}
+.eco-field-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 11.5px;
+    font-weight: 750;
+    color: #1b362d;
+    margin-bottom: 6px;
+}
+.eco-field-label small {
+    font-size: 10px;
+    font-weight: normal;
+    color: var(--admin-muted);
+}
+.eco-input, .eco-select, .eco-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #d0ded6;
+    background: #ffffff;
+    border-radius: 9px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #132620;
+    font-family: inherit;
+    transition: all 0.15s ease;
+}
+.eco-input:focus, .eco-select:focus, .eco-textarea:focus {
+    outline: none;
+    border-color: #1d7758;
+    box-shadow: 0 0 0 3px rgba(29, 119, 88, 0.14);
+}
+.eco-textarea {
+    min-height: 95px;
+    resize: vertical;
+    line-height: 1.55;
+}
+.eco-textarea.mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+    color: #0f4030;
+    background: #fbfdfc;
+}
+.eco-tag-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 6px 0 10px;
+    min-height: 24px;
+}
+.eco-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #eef6f2;
+    color: #145940;
+    border: 1px solid #c9e4d6;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 10.5px;
+    font-weight: 600;
+}
+.eco-chip.mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 10px;
+    background: #f1f7f4;
+}
+.eco-presets-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
+    margin-top: 6px;
+}
+.eco-presets-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--admin-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 3px;
+}
+.eco-preset-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    border: 1px solid #d2e4da;
+    background: #f6fbf8;
+    color: #1b634b;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 10.5px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    user-select: none;
+}
+.eco-preset-pill:hover {
+    background: #e3f4ec;
+    border-color: #a9d9c2;
+    color: #0f4a36;
+}
+
+/* Sticky Action Bar */
+.eco-actions-bar {
+    background: #ffffff;
+    border: 1px solid var(--admin-line);
+    border-radius: 16px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    box-shadow: 0 4px 16px rgba(16, 34, 30, 0.06);
+    position: sticky;
+    bottom: 20px;
+    z-index: 10;
+}
+.eco-actions-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--admin-muted);
+    font-size: 12px;
+}
+.eco-actions-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.eco-btn-save {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #10221e;
+    color: #ffffff;
+    border: 1px solid #10221e;
+    border-radius: 9px;
+    padding: 11px 22px;
+    font-size: 13px;
+    font-weight: 750;
+    cursor: pointer;
+    transition: all 0.16s ease;
+}
+.eco-btn-save:hover {
+    background: #185e46;
+    border-color: #185e46;
+    color: #ffffff;
+    box-shadow: 0 3px 12px rgba(24, 94, 70, 0.3);
+}
+.eco-btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    color: #384f46;
+    border: 1px solid #c9d8d0;
+    border-radius: 9px;
+    padding: 11px 18px;
+    font-size: 13px;
+    font-weight: 650;
+    text-decoration: none;
+    transition: all 0.16s ease;
+}
+.eco-btn-cancel:hover {
+    background: #f3f8f5;
+    color: #10221e;
+    border-color: #a8c2b5;
+}
+
+@media (max-width: 960px) {
+    .eco-admin-hero {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 22px 20px;
+    }
+    .eco-hero-side {
+        align-items: flex-start;
+    }
+    .eco-governance-grid {
+        grid-template-columns: 1fr;
+    }
+    .eco-2col, .eco-4col {
+        grid-template-columns: 1fr;
+    }
+    .eco-actions-bar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .eco-actions-right {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
