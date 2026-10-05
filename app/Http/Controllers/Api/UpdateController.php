@@ -15,10 +15,11 @@ class UpdateController extends Controller
 {
     public function check(Request $request, SoftwareProject $project)
     {
+        $request->merge(['architecture' => $request->input('architecture') ?? $request->input('arch') ?? 'x64']);
         $data = $request->validate([
             'version' => ['required', 'string', 'max:80'],
             'platform' => ['required', 'string', 'max:30'],
-            'architecture' => ['required', 'string', 'max:20'],
+            'architecture' => ['nullable', 'string', 'max:20'],
             'channel' => ['nullable', 'string', 'max:20'],
             'client_id' => ['nullable', 'string', 'max:200'],
         ]);
