@@ -37,8 +37,12 @@ class DeveloperMarketplaceController extends Controller
         $items = MarketplaceItem::where('owner_user_id', auth()->id())->with(['project.ecosystemProfile', 'releases'])->latest()->get();
         $submissions = MarketplaceSubmission::where('submitted_by', auth()->id())->with(['item.project', 'release'])->latest()->paginate(12);
         $unread = MarketplaceNotification::where('user_id', auth()->id())->whereNull('read_at')->count();
+        $ecosystems = SoftwareProject::with('ecosystemProfile')
+            ->whereHas('ecosystemProfile', fn($q) => $q->where('marketplace_enabled', true))
+            ->orderBy('name')
+            ->get();
 
-        return view('developer.dashboard', compact('items', 'submissions', 'unread'));
+        return view('developer.dashboard', compact('items', 'submissions', 'unread', 'ecosystems'));
     }
 
     public function notifications()
@@ -54,16 +58,21 @@ class DeveloperMarketplaceController extends Controller
         return back();
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $projects = $this->projects();
-        $first = $projects->first();
-        $defaultType = $first?->ecosystemProfile?->item_types[0] ?? 'plugin';
+        $selectedProjectId = (int)$request->query('project_id');
+        $selectedProject = $selectedProjectId ? $projects->firstWhere('id', $selectedProjectId) : null;
+        $selectedProject = $selectedProject ?: $projects->first();
+        $defaultType = $selectedProject?->ecosystemProfile?->item_types[0] ?? 'plugin';
 
         return view('developer.marketplace.item-form', [
             'projects' => $projects,
-            'item' => new MarketplaceItem(['item_type' => $defaultType]),
-            'categories' => $first?->marketplaceCategories()->where('is_active',true)->orderBy('sort_order')->get() ?? collect(),
+            'item' => new MarketplaceItem([
+                'software_project_id' => $selectedProject?->id,
+                'item_type' => $defaultType,
+            ]),
+            'categories' => $selectedProject?->marketplaceCategories()->where('is_active',true)->orderBy('sort_order')->get() ?? collect(),
             'mode' => 'create',
         ]);
     }
