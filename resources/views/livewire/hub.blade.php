@@ -2,7 +2,11 @@
         <header class="topbar">
             <a class="brand" href="{{ route('hub') }}"><span class="brand-logo"><img src="{{ asset('images/rozehub-ecosystem.png').'?v=20260828-professional-logo-2' }}" alt="RozeHub"></span><span>RozeHub</span></a>
             <nav><a class="active" href="#catalog">Explore</a><a href="{{ route('marketplace.index') }}">Extensions</a><a href="#releases">Releases</a><a href="{{ route('docs.index') }}">Documentation</a><a href="#community">Community</a></nav>
-            <a class="studio-link" href="{{ route('admin.login') }}">Admin login <span>↗</span></a>
+            @auth
+                <a class="studio-link" href="{{ route('account') }}">{{ Auth::user()->name }} <span>👤</span></a>
+            @else
+                <a class="studio-link" href="{{ route('login') }}">Sign In <span>→</span></a>
+            @endauth
         </header>
 
         <section class="hero">
@@ -247,5 +251,21 @@
                 <form class="review-form" wire:submit="saveReview"><p class="eyebrow">Leave a review</p><h3>Your release notes, in context.</h3>@if(session('review-sent'))<p class="success">{{ session('review-sent') }}</p>@endif<label>Your name<input wire:model="reviewName" placeholder="Name or handle"></label>@error('reviewName')<small class="error">{{ $message }}</small>@enderror<label>Rating<select wire:model="reviewRating">@for($rating = 5; $rating >= 1; $rating--)<option value="{{ $rating }}">{{ $rating }} stars</option>@endfor</select></label><label>What worked for you?<textarea wire:model="reviewBody" placeholder="Share a useful, specific note..."></textarea></label>@error('reviewBody')<small class="error">{{ $message }}</small>@enderror<button class="button primary" type="submit">Publish review <span>→</span></button></form>
             </div>
         </section>
-        <footer class="site-footer"><a class="brand" href="#"><span class="brand-logo"><img src="{{ asset('images/rozehub-ecosystem.png').'?v=20260828-professional-logo-2' }}" alt="RozeHub"></span><span>RozeHub</span></a><p>Software made with intent. Built by Firoze.</p><a href="{{ route('admin.login') }}">Admin login →</a></footer>
+        <footer class="site-footer">
+            <a class="brand" href="{{ route('hub') }}">
+                <span class="brand-logo"><img src="{{ asset('images/rozehub-ecosystem.png').'?v=20260828-professional-logo-2' }}" alt="RozeHub"></span>
+                <span>RozeHub</span>
+            </a>
+            <p>Software made with intent. Built by Firoze.</p>
+            <div style="display: flex; gap: 16px; align-items: center; font-size: 13px;">
+                @auth
+                    <a href="{{ route('account') }}" style="color: #38bdf8;">My Account</a>
+                    <a href="{{ route('developer.dashboard') }}" style="color: #38dc9c;">Developer Center</a>
+                @else
+                    <a href="{{ route('login') }}" style="color: #38bdf8;">User Sign In</a>
+                    <a href="{{ route('developer.login') }}" style="color: #38dc9c;">Developer Center</a>
+                @endauth
+                <a href="{{ route('admin.login') }}" style="color: #94a3b8;">Admin Studio →</a>
+            </div>
+        </footer>
 </main>

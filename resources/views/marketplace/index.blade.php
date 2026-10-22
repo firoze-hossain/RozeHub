@@ -16,23 +16,33 @@
         <a href="{{ route('hub') }}#community">Community</a>
     </nav>
     @auth
-        <a class="studio-link" href="{{ route('developer.dashboard') }}">Developer Portal <span>↗</span></a>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <a class="studio-link" href="{{ route('account') }}">{{ Auth::user()->name }} <span>👤</span></a>
+            <a class="studio-link" href="{{ route('developer.dashboard') }}" style="background: #147255; color: white;">Developer Portal <span>↗</span></a>
+        </div>
     @else
-        <a class="studio-link" href="{{ route('admin.login') }}">Admin login <span>↗</span></a>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <a class="studio-link" href="{{ route('login') }}">Sign In <span>→</span></a>
+            <a class="studio-link" href="{{ route('developer.login') }}" style="background: #147255; color: white;">Developer Portal <span>↗</span></a>
+        </div>
     @endauth
 </header>
 <div class="market-public">
 <section class="market-hero"><span class="mp-badge">ROZEHUB ECOSYSTEM</span><h1>Build on the tools you use.</h1><p>Discover community plugins, drivers, packages, integrations and system components. RozeHub adapts the extension model to each project — database tooling for DBNavigator, language support for Lumina, packages for Roze, engine extensions for StratosDB, API workflows for ThunderCall, collectors for TrackEye and native packages for NOVAOS.</p><div class="ecosystem-strip">@foreach($projects as $project)<a class="ecosystem-link @if(request('project')===$project->slug)active @endif" href="{{ route('marketplace.index',['project'=>$project->slug]) }}">{{ $project->name }}</a>@endforeach</div>
 <form class="market-search"><input name="q" value="{{ request('q') }}" placeholder="Search extensions, capabilities, integrations…"><select name="project"><option value="">All projects</option>@foreach($projects as $p)<option value="{{ $p->slug }}" @selected(request('project')===$p->slug)>{{ $p->name }}</option>@endforeach</select><select name="type"><option value="">All types</option>@foreach($types as $type)<option value="{{ $type }}" @selected(request('type')===$type)>{{ str_replace('-',' ',ucfirst($type)) }}</option>@endforeach</select>@if(request('project') && $categories->count())<select name="category"><option value="">All categories</option>@foreach($categories as $cat)<option value="{{ $cat->name }}" @selected(request('category')===$cat->name)>{{ $cat->name }}</option>@endforeach</select>@endif<select name="capability"><option value="">All capabilities</option>@foreach($capabilities as $cap)<option value="{{ $cap }}" @selected(request('capability')===$cap)>{{ $cap }}</option>@endforeach</select><button class="admin-button primary">Search</button></form></section>
 <div class="market-intro"><h2>Extension catalog</h2><span>{{ $items->total() }} published items</span></div><div class="mp-grid">@forelse($items as $item)<article class="mp-card"><div class="mp-icon">{{ strtoupper(substr($item->name,0,1)) }}</div><span class="mp-badge">{{ str_replace('-',' ',ucfirst($item->item_type)) }}</span>@if($item->is_official)<span class="mp-badge official">Official</span>@endif @if($item->is_verified)<span class="mp-badge">Verified</span>@endif<h2>{{ $item->name }}</h2><div class="mp-meta">{{ $item->project->name }} · {{ $item->vendor ?: 'Community' }}</div><p class="mp-summary">{{ $item->summary }}</p>@if($item->capabilities)<div class="mp-capabilities">@foreach(array_slice($item->capabilities,0,4) as $cap)<span class="mp-cap">{{ $cap }}</span>@endforeach</div>@endif<div class="mp-meta" style="margin-top:12px">{{ number_format($item->downloads_count) }} installs</div><a class="mp-link" href="{{ route('marketplace.item',$item) }}">View extension →</a></article>@empty<p>No published items match your filters.</p>@endforelse</div><div style="margin-top:28px">{{ $items->links() }}</div></div>
-<footer class="site-footer" style="max-width:1200px;margin:0 auto;padding:30px 24px;">
+<footer class="site-footer" style="max-width:1200px;margin:0 auto;padding:30px 24px;display:flex;justify-content:space-between;align-items:center;">
     <a class="brand" href="{{ route('hub') }}">
         <span class="brand-logo">
             <img src="{{ asset('images/rozehub-ecosystem.png').'?v=20260828-professional-logo-2' }}" alt="RozeHub">
         </span>
         <span>RozeHub</span>
     </a>
-    <p>Software made with intent. Built by Firoze Hossain.</p>
-    <a href="{{ route('admin.login') }}">Admin studio →</a>
+    <p style="margin:0;">Software made with intent. Built by Firoze Hossain.</p>
+    <div style="display:flex;gap:16px;align-items:center;font-size:13px;">
+        <a href="{{ route('login') }}" style="color:#38bdf8;">User Sign In</a>
+        <a href="{{ route('developer.login') }}" style="color:#38dc9c;">Developer Center</a>
+        <a href="{{ route('admin.login') }}" style="color:#94a3b8;">Admin studio →</a>
+    </div>
 </footer>
 </body></html>

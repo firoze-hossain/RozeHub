@@ -5,6 +5,24 @@ use App\Http\Controllers\NovaosAdminController;
 use App\Http\Controllers\NovaosReleaseController; use App\Http\Controllers\AdminReleaseUploadController; use App\Livewire\Hub; use App\Models\SoftwareProject; use Illuminate\Support\Facades\Route;
 Route::get('/',Hub::class)->name('hub');
 Route::get('/download/{release}',ReleaseDownloadController::class)->middleware('throttle:30,1')->name('releases.download');
+
+// Universal Desktop SSO & Central Credential Verification
+Route::get('/auth/desktop', [\App\Http\Controllers\DesktopAuthController::class, 'prompt'])->name('auth.desktop');
+Route::post('/auth/desktop/authorize', [\App\Http\Controllers\DesktopAuthController::class, 'authorizeApp'])->name('auth.desktop.authorize');
+Route::post('/api/v1/auth/verify', [\App\Http\Controllers\DesktopAuthController::class, 'verifyCredentials'])->name('api.auth.verify');
+
+// Universal Single Account & Authentication
+Route::get('/login', [\App\Http\Controllers\UserAccountController::class, 'showLogin'])->name('login');
+Route::post('/login', [\App\Http\Controllers\UserAccountController::class, 'login'])->name('login.submit');
+Route::get('/register', [\App\Http\Controllers\UserAccountController::class, 'showRegister'])->name('register');
+Route::post('/register', [\App\Http\Controllers\UserAccountController::class, 'register'])->name('register.submit');
+Route::post('/logout', [\App\Http\Controllers\UserAccountController::class, 'logout'])->name('logout');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/account', [\App\Http\Controllers\UserAccountController::class, 'account'])->name('account');
+    Route::put('/account', [\App\Http\Controllers\UserAccountController::class, 'updateProfile'])->name('account.update');
+    Route::put('/account/password', [\App\Http\Controllers\UserAccountController::class, 'updatePassword'])->name('account.password');
+});
 Route::get('/admin/login',[AdminAuthController::class,'showLogin'])->name('admin.login');
 Route::post('/admin/login',[AdminAuthController::class,'login'])->name('admin.login.submit');
 Route::post('/admin/logout',[AdminAuthController::class,'logout'])->name('admin.logout');
