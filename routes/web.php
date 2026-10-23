@@ -74,6 +74,10 @@ Route::get('/docs/{project:slug}/download.md', [\App\Http\Controllers\Documentat
 Route::get('/docs/{project:slug}/{pageSlug}', [\App\Http\Controllers\DocumentationController::class, 'page'])->name('docs.page');
 Route::get('/docs/{project:slug}', [\App\Http\Controllers\DocumentationController::class, 'project'])->name('docs.project');
 
+// Public support center
+Route::get('/support', [\App\Http\Controllers\SupportController::class, 'index'])->name('support.index');
+Route::get('/support/{project:slug}', [\App\Http\Controllers\SupportController::class, 'project'])->name('support.project');
+
 Route::middleware(['auth','admin'])->prefix('admin')->name('admin.')->group(function(){
     Route::get('/documentation', [\App\Http\Controllers\AdminDocumentationController::class, 'index'])->name('documentation.index');
     Route::get('/documentation/{project:slug}', [\App\Http\Controllers\AdminDocumentationController::class, 'project'])->name('documentation.project');
