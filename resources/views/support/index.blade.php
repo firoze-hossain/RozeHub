@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $project ? $project->name : 'ThunderCall' }} Support Center · RozeHub</title>
+    <title>Support Center · RozeHub</title>
     <link rel="icon" href="{{ asset('images/rozehub-icon.png') }}">
     <link rel="stylesheet" href="{{ asset('css/rozehub.css') }}">
     <style>
@@ -80,120 +80,140 @@
             margin: 50px auto 80px;
             padding: 0 24px;
         }
-        .support-grid {
+        .section-header {
+            margin-bottom: 28px;
+        }
+        .section-header h2 {
+            font-size: 28px;
+            letter-spacing: -0.8px;
+            margin: 0 0 8px;
+            color: var(--ink);
+        }
+        .section-header p {
+            font-size: 15px;
+            color: var(--muted);
+            margin: 0;
+        }
+        .projects-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
+            gap: 22px;
             margin-bottom: 60px;
         }
-        @media (max-width: 900px) {
-            .support-grid { grid-template-columns: 1fr; }
+        @media (max-width: 960px) {
+            .projects-grid { grid-template-columns: repeat(2, 1fr); }
         }
-        .support-card {
+        @media (max-width: 640px) {
+            .projects-grid { grid-template-columns: 1fr; }
+        }
+        .project-support-card {
             background: #ffffff;
             border: 1px solid var(--line);
-            border-radius: 10px;
-            padding: 30px 24px;
+            border-radius: 12px;
+            padding: 26px 22px;
             text-decoration: none;
             color: var(--ink);
             display: flex;
             flex-direction: column;
             transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
-        .support-card:hover {
-            transform: translateY(-3px);
+        .project-support-card:hover {
+            transform: translateY(-4px);
             border-color: #2f9d76;
             box-shadow: 0 12px 28px rgba(18, 60, 53, 0.08);
         }
-        .support-card-icon {
-            font-size: 34px;
-            margin-bottom: 16px;
-            display: inline-block;
+        .card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
         }
-        .support-card h3 {
+        .card-icon {
+            width: 42px;
+            height: 42px;
+            background: var(--dark);
+            color: var(--mint);
+            font-weight: 800;
             font-size: 20px;
-            margin: 0 0 10px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+        }
+        .card-category {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--muted);
+            background: rgba(18, 60, 53, 0.06);
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+        .project-support-card h3 {
+            font-size: 20px;
+            margin: 0 0 8px;
             font-weight: 700;
             letter-spacing: -0.4px;
         }
-        .support-card p {
-            font-size: 14px;
+        .project-support-card p {
+            font-size: 13px;
             color: var(--muted);
-            line-height: 1.6;
-            margin: 0 0 20px;
+            line-height: 1.55;
+            margin: 0 0 18px;
             flex: 1;
         }
-        .support-card-link {
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid #eef2ef;
+            padding-top: 14px;
             font-size: 13px;
             font-weight: 700;
             color: #207e5d;
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
-        .faq-section {
-            background: #ffffff;
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            padding: 36px 32px;
+        .card-footer .docs-count {
+            font-size: 11px;
+            color: var(--muted);
+            font-weight: normal;
+        }
+        .support-global-resources {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
             margin-bottom: 50px;
         }
-        .faq-section h2 {
-            font-size: 26px;
-            letter-spacing: -0.8px;
-            margin: 0 0 20px;
+        @media (max-width: 800px) {
+            .support-global-resources { grid-template-columns: 1fr; }
         }
-        .faq-item {
-            border-top: 1px solid var(--line);
-            padding: 18px 0;
+        .resource-box {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 24px 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
         }
-        .faq-question {
+        .resource-box .res-icon {
+            font-size: 28px;
+        }
+        .resource-box h4 {
+            margin: 0 0 6px;
             font-size: 16px;
             font-weight: 700;
-            color: var(--ink);
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
-        .faq-answer {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #4e5e59;
-            line-height: 1.65;
+        .resource-box p {
+            margin: 0 0 10px;
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.5;
         }
-        .contact-box {
-            background: linear-gradient(135deg, #123c35 0%, #174e44 100%);
-            border-radius: 12px;
-            padding: 40px 36px;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 30px;
-        }
-        @media (max-width: 780px) {
-            .contact-box { flex-direction: column; text-align: center; }
-        }
-        .contact-box h3 {
-            font-size: 24px;
-            margin: 0 0 8px;
-            letter-spacing: -0.5px;
-        }
-        .contact-box p {
-            margin: 0;
-            color: #c1ded5;
-            font-size: 14px;
-        }
-        .contact-box .btn {
-            background: var(--mint);
-            color: #0b2520;
-            padding: 13px 24px;
-            border-radius: 6px;
+        .resource-box a {
+            color: #207e5d;
+            font-size: 13px;
             font-weight: 700;
-            font-size: 14px;
             text-decoration: none;
-            white-space: nowrap;
         }
     </style>
 </head>
@@ -206,10 +226,8 @@
         </a>
         <nav>
             <a href="{{ route('hub') }}">Home</a>
-            <a href="{{ route('docs.index') }}">Docs</a>
-            @if($project)
-                <a href="{{ route('docs.project', $project) }}">{{ $project->name }} Docs</a>
-            @endif
+            <a href="{{ route('docs.index') }}">Documentation</a>
+            <a href="{{ route('hub') }}#releases">Releases</a>
             <a class="active" href="{{ route('support.index') }}">Support</a>
         </nav>
         <form class="docs-search" action="{{ route('docs.search') }}">
@@ -221,89 +239,84 @@
 
 <section class="support-hero">
     <div class="support-hero-inner">
-        <h1>{{ $project ? $project->name : 'ThunderCall' }} Support Center</h1>
-        <p>Need help? Check out our documentation, browse troubleshooting FAQs, or report an issue.</p>
+        <h1>RozeHub Support Center</h1>
+        <p>Choose a project below for dedicated documentation, troubleshooting solutions, FAQs, and issue trackers.</p>
 
         <form class="support-search-box" action="{{ route('docs.search') }}" method="GET">
             <span>⌕</span>
-            <input type="text" name="q" placeholder="How can we help? (e.g. variables, ssl, clear cache)...">
+            <input type="text" name="q" placeholder="Search documentation and solutions across all projects...">
         </form>
 
         <div class="support-status-badge">
             <span class="dot"></span>
-            <span>All systems operational &bull; Spring Boot Engine v1.0.0</span>
+            <span>All systems operational &bull; RozeHub Developer Platform</span>
         </div>
     </div>
 </section>
 
 <main class="support-content">
-    <div class="support-grid">
-        <a href="{{ $project ? route('docs.project', $project) : route('docs.index') }}" class="support-card">
-            <span class="support-card-icon">📖</span>
-            <h3>Getting started</h3>
-            <p>Explore official tutorials, request workflow guides, and learn how to construct requests and inspect responses.</p>
-            <span class="support-card-link">Browse documentation &rarr;</span>
-        </a>
-
-        <a href="#faq" class="support-card">
-            <span class="support-card-icon">🧩</span>
-            <h3>Resolve issues & FAQs</h3>
-            <p>Get instant solutions for common networking errors, self-signed SSL certs, environment variables, and cache issues.</p>
-            <span class="support-card-link">View common solutions &rarr;</span>
-        </a>
-
-        <a href="{{ $project && $project->github_url ? $project->github_url . '/issues' : 'https://github.com/firoze-hossain/thundercall/issues' }}" target="_blank" rel="noopener" class="support-card">
-            <span class="support-card-icon">📝</span>
-            <h3>GitHub issue tracker</h3>
-            <p>Browse open discussions, submit bug reports, track development progress, or request new capabilities.</p>
-            <span class="support-card-link">Open GitHub issues &rarr;</span>
-        </a>
+    <div class="section-header">
+        <h2>Select a Project for Dedicated Support</h2>
+        <p>Each software project in the RozeHub ecosystem maintains its own guides, FAQs, and GitHub issue trackers.</p>
     </div>
 
-    <section id="faq" class="faq-section">
-        <h2>Frequently Asked Questions</h2>
+    <div class="projects-grid">
+        @foreach($projects as $project)
+            <a href="{{ route('support.project', $project) }}" class="project-support-card">
+                <div class="card-top">
+                    <span class="card-icon">{{ $project->icon }}</span>
+                    <span class="card-category">{{ $project->category }}</span>
+                </div>
+                <h3>{{ $project->name }}</h3>
+                <p>{{ $project->tagline }}</p>
+                <div class="card-footer">
+                    <span>Open Support &rarr;</span>
+                    @if($project->published_docs_count > 0)
+                        <span class="docs-count">{{ $project->published_docs_count }} doc pages</span>
+                    @endif
+                </div>
+            </a>
+        @endforeach
+    </div>
 
-        <div class="faq-item">
-            <div class="faq-question">1. How do I fix "Connection Refused" when testing localhost APIs?</div>
-            <div class="faq-answer">
-                Verify that your backend service (e.g. Spring Boot, Node.js, FastAPI) is running and bound to <code>0.0.0.0</code> or <code>127.0.0.1</code>. If using Docker, ensure the port mapping (e.g. <code>-p 8080:8080</code>) is properly exposed to the host machine.
+    <div class="section-header">
+        <h2>Global Ecosystem Resources</h2>
+        <p>Cross-project development tooling, open source channels, and downloads.</p>
+    </div>
+
+    <div class="support-global-resources">
+        <div class="resource-box">
+            <span class="res-icon">📚</span>
+            <div>
+                <h4>Documentation Library</h4>
+                <p>Browse full versioned architecture manuals, quickstarts, and API guides.</p>
+                <a href="{{ route('docs.index') }}">Visit Documentation &rarr;</a>
             </div>
         </div>
 
-        <div class="faq-item">
-            <div class="faq-question">2. How does "Clear Cache and Reload" work?</div>
-            <div class="faq-answer">
-                Under the <strong>Help &gt; Clear Cache and Reload</strong> menu, ThunderCall safely flushes transient in-memory caches (collection variables, comment threads, schema introspections, and temporary response bodies) and refetches all collections and environments freshly from the backend server. Unsaved edits in open tabs will prompt before being discarded.
+        <div class="resource-box">
+            <span class="res-icon">📦</span>
+            <div>
+                <h4>Releases & Downloads</h4>
+                <p>Download release binaries, checksums, and update notes for all apps.</p>
+                <a href="{{ route('hub') }}#releases">View All Releases &rarr;</a>
             </div>
         </div>
 
-        <div class="faq-item">
-            <div class="faq-question">3. How do I use dynamic environment variables?</div>
-            <div class="faq-answer">
-                Wrap variable names with double curly braces like <code>&#123;&#123;baseUrl&#125;&#125;</code> or <code>&#123;&#123;token&#125;&#125;</code> in URLs, headers, or request bodies. ThunderCall will resolve them hierarchically: Local &rarr; Environment &rarr; Collection &rarr; Global.
+        <div class="resource-box">
+            <span class="res-icon">💻</span>
+            <div>
+                <h4>GitHub Organization</h4>
+                <p>Explore source code repositories, open pull requests, and file issues.</p>
+                <a href="https://github.com/firoze-hossain" target="_blank" rel="noopener">Visit GitHub ↗</a>
             </div>
         </div>
-
-        <div class="faq-item">
-            <div class="faq-question">4. Can I import my existing Postman collections?</div>
-            <div class="faq-answer">
-                Yes! ThunderCall natively supports the Postman Collection v2.1.0 schema. Click <strong>File &gt; Import…</strong> or the top bar <strong>Import</strong> button and select your exported JSON file.
-            </div>
-        </div>
-    </section>
-
-    <div class="contact-box">
-        <div>
-            <h3>Need direct support from our developers?</h3>
-            <p>Our engineering team is actively building and improving ThunderCall. Drop us an issue or contribute on GitHub.</p>
-        </div>
-        <a href="https://github.com/firoze-hossain/thundercall" target="_blank" rel="noopener" class="btn">Visit GitHub Repository ↗</a>
     </div>
 </main>
 
 <footer class="docs-footer">
-    <span>ThunderCall Support Center &bull; Powered by RozeHub</span>
-    <span><a href="{{ route('hub') }}">RozeHub Home</a> &bull; <a href="{{ route('docs.index') }}">Documentation</a></span>
+    <span>RozeHub Support Center &bull; Developer Tooling &amp; Systems</span>
+    <span><a href="{{ route('hub') }}">Home</a> &bull; <a href="{{ route('docs.index') }}">Docs</a> &bull; <a href="{{ route('support.index') }}">Support</a></span>
 </footer>
 </body>
 </html>
