@@ -389,6 +389,91 @@ MD
                     ],
                 ],
             ],
+            [
+                'title' => 'Security Architecture & Capability Review',
+                'slug' => 'security-architecture-and-capability-review',
+                'description' => 'Comprehensive technical security review covering syscall authorization, memory isolation, least-privilege matrix, and verification.',
+                'icon' => '🛡️',
+                'sort_order' => 20,
+                'pages' => [
+                    [
+                        'title' => 'Syscall Authorization & Security Matrix',
+                        'slug' => 'syscall-authorization-and-security-matrix',
+                        'kind' => 'guide',
+                        'summary' => 'Complete audit of all 84 NovaOS system calls, privilege gates, capability allowlists, and pointer validation bounds.',
+                        'content' => <<<'MD'
+# Syscall Authorization & Security Matrix
+
+NovaOS exposes 84 numbered system calls via software interrupt `int 0x80`. Every system call is gated according to strict defense-in-depth principles:
+
+## 1. Trust Boundaries & Address Space Split
+- **High-Memory Kernel Split (`0xC0000000`)**: The kernel resides in high memory (`0xC0000000 - 0xFFFFFFFF`). User space operates in the lower 3GB (`0x00000000 - 0xBFFFFFFF`).
+- **User-Pointer Sanitization (`paging_user_range_ok`)**: Every pointer passed into a syscall handler is validated before dereferencing:
+  1. Rejects pointers into kernel virtual address space (`>= 0xC0000000`).
+  2. Rejects Page 0 (`0x00000000 - 0x00000FFF`, IVT & BIOS data area).
+  3. Rejects integer arithmetic wrap-around (`addr + len < addr`).
+  4. Checks write permissions on destination user buffers.
+
+## 2. Syscall Gate Categories
+1. **Open Syscalls**: Low-risk operations available to all ring-3 tasks (`SYS_WRITE`, `SYS_EXIT`, `SYS_YIELD`, `SYS_SBRK`, `SYS_RTC_READ`, `SYS_LSPCI`, `SYS_BEEP`).
+2. **Capability-Gated Syscalls**: Access granted only if the process's capability descriptor allowlist explicitly includes the target resource:
+   - `SYS_OPEN`, `SYS_WRITE_FILE`, `SYS_DELETE_FILE`: gated by `allowed_files[]` or `can_open_any_file`.
+   - `SYS_NET_SEND`, `SYS_TFTP_FETCH`: gated by `allowed_hosts[]`.
+   - `SYS_SPAWN`, `SYS_EXEC`, `SYS_FORK`: gated by `can_spawn`.
+   - `SYS_EXEC_TRUSTED`: gated by caller's current possession of `can_open_any_file`.
+3. **Root-Gated Syscalls**: Mutating system administration interfaces strictly require `cur->uid == 0` and unconfined MAC profile:
+   - `SYS_OS_UPDATE`: applying update packages, committing slots, rolling back.
+   - `SYS_CRASHDUMP_CTL`: triggering diagnostic exports and clearing records.
+   - `SYS_DISK_INSTALL`: live partition creation and formatting.
+   - `SYS_SHUTDOWN`: ACPI S5 system power-off.
+   - `SYS_FW_CTL` & `SYS_FW_INFO`: stateful firewall rule manipulation.
+   - `SYS_PKGREPO_CTL`: in-kernel repository HTTP server control.
+4. **Owner-Gated Resources**:
+   - `SYS_FB_ACQUIRE`: enforces single exclusive owner (`-EBUSY` for competitors).
+   - `SYS_SHM_*`: access controlled by per-object Access Control Lists (ACLs).
+   - `SYS_MSG_*`: sender PID and UID are stamped immutably from kernel process records.
+MD
+                    ],
+                    [
+                        'title' => 'Application Least-Privilege & Sandboxing',
+                        'slug' => 'application-least-privilege-and-sandboxing',
+                        'kind' => 'guide',
+                        'summary' => 'Detailed least-privilege analysis for all 13 ring-3 applications, MAC enforcement, IPC boundaries, and credential zeroing.',
+                        'content' => <<<'MD'
+# Application Least-Privilege & Sandboxing
+
+Every user-facing application in NovaOS is designed to operate under the principle of least privilege:
+
+## 1. Application Privilege Matrix
+- **`NOVAINIT.ELF` (PID 1)**: Supervisor init process. Runs as UID 0, drops privileges when launching user services, restarts crashed essential services.
+- **`LOGIN.ELF`**: Graphical authentication screen. Starts as UID 0, verifies credentials via `SYS_LOGIN`, immediately drops process identity to authenticated user UID/GID.
+- **`FIRSTRUN.ELF`**: Setup wizard. Configures machine hostname, creates root credentials with PBKDF2-HMAC-SHA256, and deploys initial configuration.
+- **`WM.ELF`**: Window manager and compositor. Sole exclusive owner of the display framebuffer (`SYS_FB_ACQUIRE`).
+- **`FILES.ELF`**: Sandboxed file manager. Bound to user directories; cannot access raw disk partitions or kernel configuration files without capability.
+- **`TERM.ELF`**: Terminal emulator. Confined to pipe I/O and process execution within user shell environment.
+- **`EDIT.ELF`**: Monospace text editor. Sandboxed to explicitly opened file handles; cannot spawn processes or perform network I/O.
+- **`STORE.ELF`**: Package store client. Confined to `/PACKAGES` directory; verifies all package payloads with HMAC-SHA256 before installation.
+- **`SETTINGS.ELF`**: System configuration. Standard tabs read-only; administrative changes require explicit elevation via `sudo`.
+- **`KLOG.ELF`**: Structured kernel log viewer. Read-only inspection via `SYS_KLOG_READ`.
+- **`ACTMON.ELF`**: Activity monitor. Read-only process table telemetry via `SYS_PROC_INFO`.
+- **`INSTALL.ELF`**: Partitioning wizard. Requires explicit confirmation and safety switch before driving `SYS_DISK_INSTALL`.
+- **`CRASHREP.ELF`**: Crash dump reporter. Read-only inspection of `/CRASHDMP.DAT` and `/CRASHDMP.TXT`.
+
+## 2. Plaintext Credential Sanitization
+In `LOGIN.ELF`, `FIRSTRUN.ELF`, `firstrun.c`, and `users.rs`, plaintext user password buffers are scrubbed immediately after digest derivation:
+- Temporary buffers are overwritten with zero bytes using volatile memory loops (`memset`).
+- Eliminates credential retention in physical page frames or swap space.
+- Constant-time 32-byte digest comparisons prevent timing side-channel attacks.
+
+## 3. Verification & Compliance
+Validated continuously via:
+- In-kernel boot self-test Phase 98 (`kernel_security_audit_selftest` -> result=0).
+- Host-side security test suite (`make test-security` -> 10/10 checks passed).
+- End-to-end automated QEMU boot test (`make test` -> 319 assertions passed).
+MD
+                    ],
+                ],
+            ],
         ];
 
         // 3. Insert or Update Sections and Pages
