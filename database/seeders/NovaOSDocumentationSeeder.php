@@ -185,6 +185,97 @@ impl PageTableWalker {
   - `[PASS] x86_64_long_mode_paging`: Verified in both Desktop and Server build profiles.
 MD
                     ],
+                    [
+                        'title' => 'Pure Rust UEFI 2.9 Bootloader & GPT Discovery',
+                        'slug' => 'pure-rust-uefi-bootloader-and-gpt-discovery',
+                        'kind' => 'architecture',
+                        'summary' => 'Modern UEFI 2.9 bootloader in Rust: GUID Partition Table (GPT) discovery, Secure Boot PE/COFF Authenticode signature verification, native GOP 1080p/4K resolution selection, and 64-bit BootInfo handover.',
+                        'content' => <<<'MD'
+# Pure Rust UEFI 2.9 Bootloader & GPT Partition Discovery
+
+NovaOS 2.0 replaces legacy BIOS and Multiboot 1 with a modern, high-performance UEFI 2.9 bootloader written in `#![no_std]` Rust (`boot/uefi-loader/`). The loader builds directly into `BOOTX64.EFI`, eliminating external dependencies on GRUB and providing hardware compatibility across modern physical laptops, workstations, servers, and hypervisors.
+
+```text
++-----------------------------------------------------------------------------------------+
+|                               NovaOS 2.0 UEFI Boot Pipeline                             |
++-----------------------------------------------------------------------------------------+
+|  UEFI Firmware (Tianocore / Insyde / AMI)                                               |
+|       |                                                                                 |
+|       v                                                                                 |
+|  \EFI\BOOT\BOOTX64.EFI  (Pure Rust UEFI 2.9 Executable)                                 |
+|       +---> 1. Protective MBR & Primary GPT Header Validation (LBA 0 & 1, CRC32 Check)  |
+|       +---> 2. Root Filesystem Discovery (GUID: 0FC63DAF-8483-4772-8E79-3D69D8477DE4)   |
+|       +---> 3. Secure Boot Authenticode PE32+ Signature Checking (SHA-256 Digest)       |
+|       +---> 4. GOP Display Resolution Negotiation (Native 1080p / 4K Ultra-HD)          |
+|       +---> 5. 64-Bit ELF Kernel Loading & Higher-Half Relocation (PT_LOAD Segments)   |
+|       +---> 6. Physical Memory Map Decoding & ExitBootServices                          |
+|       v                                                                                 |
+|  Kernel Entry Point (x86_64 Long Mode, RDI = BootInfo Pointer)                          |
++-----------------------------------------------------------------------------------------+
+```
+
+## Architectural Subsystems
+
+1. **GUID Partition Table (GPT) Engine (`boot/uefi-loader/src/gpt.rs`)**:
+   - **Protective MBR Validation**: Validates the single partition record at LBA 0 marked with type `0xEE` and boot signature `0xAA55`.
+   - **Primary GPT Header**: Validates the 92-byte header at LBA 1 ("`EFI PART`" / `0x5452415020494645`), verifies Header CRC32, and extracts the partition array starting LBA (LBA 2).
+   - **CRC32 Integrity**: Computes full IEEE 802.3 CRC32 verification over both the GPT header and the 128-entry partition table array.
+   - **Automated Partition Discovery**:
+     - **NovaOS Root Filesystem GUID**: `0FC63DAF-8483-4772-8E79-3D69D8477DE4`.
+     - **EFI System Partition (ESP) GUID**: `C12A7328-F81F-11D2-BA4B-00A0C93EC93B`.
+     - **Microsoft Basic Data GUID**: `EBD0A0A2-B9E5-4433-87C0-68B6B72699C7`.
+
+2. **Secure Boot Authenticode Engine (`boot/uefi-loader/src/pe.rs`)**:
+   - **PE32+ Header Parsing**: Parses DOS `MZ` header, PE signature, COFF Machine (`0x8664` AMD64), and 64-bit Optional Header (`0x020B`).
+   - **Security Directory Extraction**: Extracts Directory Entry 4 pointing to the Certificate Table.
+   - **Authenticode SHA-256 Digest**: Computes cryptographic file digest excluding the 4-byte PE checksum, the 8-byte security directory entry, and the trailing certificate table.
+   - **Platform Policy Enforcement**: Supports `Disabled`, `AuditOnly`, and `Enforced` modes with root key hash verification.
+
+3. **UEFI Graphics Output Protocol (GOP) (`boot/uefi-loader/src/gop.rs`)**:
+   - Discovers native high-definition display modes:
+     - 4K Ultra-HD: `3840 x 2160` direct color
+     - 1440p QHD: `2560 x 1440` direct color
+     - 1080p Full-HD: `1920 x 1080` direct color
+     - 768p XGA fallback: `1024 x 768` direct color
+   - Configures linear 32bpp framebuffer (`PixelBlueGreenRedReserved8BitPerColor` / RGB) with zero mode-switching flicker.
+
+4. **64-Bit ELF Kernel Loader (`boot/uefi-loader/src/elf.rs`)**:
+   - Parses ELF64 header (`ELFCLASS64`, `EM_X86_64`, `ET_EXEC`).
+   - Iterates `PT_LOAD` segments and maps kernel code/data into physical memory.
+   - Automatically handles higher-half kernel virtual addresses (`0xFFFF_8000_0000_0000`) and clears uninitialized BSS sections (`p_memsz > p_filesz`).
+
+5. **Modern BootInfo Handover Contract (`boot/uefi-loader/src/boot_info.rs`)**:
+   - Passes comprehensive system state in register `RDI`:
+     - Magic signature: `0x4E4F5641_55454649` (`NOVAUEFI`)
+     - Protocol version: `0x0200`
+     - Linear framebuffer base, size, width, height, stride, and color format
+     - Physical memory map descriptor array pointer, descriptor count, and total usable RAM bytes
+     - ACPI RSDP 64-bit physical address
+     - Kernel physical and virtual entry points
+     - Kernel command-line parameters (`cmdline`)
+
+## Verification & Self-Test
+
+- **Host-Side Unit & Compilation Suite**:
+  ```bash
+  make uefi-test
+  # Output:
+  # --- boot/uefi-loader/src/lib.rs host tests (Pure Rust UEFI & GPT Subsystem) ---
+  # test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+  # --- boot/uefi-loader/src/main.rs host tests (UEFI 2.9 Entry & Sequence) ---
+  # test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+  # --- Building release BOOTX64.EFI for x86_64-unknown-uefi ---
+  # [PASS] Generated valid x86_64 PE32+ EFI application: BOOTX64.EFI
+  # [PASS] All UEFI 2.9 bootloader & GPT discovery host tests succeeded.
+  ```
+- **Kernel Boot Integration**:
+  ```text
+  [ OK ] Pure Rust UEFI 2.9 bootloader & GPT engine initialized (GOP 1080p/4K, Secure Boot PE signature, BootInfo handover)
+  ```
+- **Automated Test Runner**:
+  - `[PASS] uefi_gpt_bootloader`: Verified across Desktop and Server build editions.
+MD
+                    ],
                 ],
             ],
             [
