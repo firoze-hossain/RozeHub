@@ -65,6 +65,129 @@ class NovaOSDocumentationSeeder extends Seeder
         // 2. Define User Documentation Sections and Pages
         $sections = [
             [
+                'title' => 'NovaOS 2.0 Kernel & 64-Bit Architecture',
+                'slug' => 'kernel-and-64bit-architecture',
+                'description' => 'Architectural specifications and engineering guides for NovaOS 2.0 pure Rust x86_64 Long Mode, memory management, and modern hardware subsystems.',
+                'icon' => '🦀',
+                'sort_order' => 5,
+                'pages' => [
+                    [
+                        'title' => 'Pure Rust x86_64 Long Mode & PML4 4-Level Paging Engine',
+                        'slug' => 'pure-rust-x86-64-long-mode-and-pml4-paging-engine',
+                        'kind' => 'architecture',
+                        'summary' => 'Transition from 32-bit legacy paging to 64-bit Long Mode: 4-level PML4 paging, canonical address filtering, NX hardware protection, 2MB/1GB huge pages, higher-half kernel base, and zero-unsafe page-table walker.',
+                        'content' => <<<'MD'
+# Pure Rust x86_64 Long Mode & PML4 4-Level Paging Engine
+
+NovaOS 2.0 transitions the CPU execution model from legacy 32-bit protected mode (`i686`) to pure 64-bit Long Mode (`x86_64`). The entire virtual memory management architecture is implemented in `#![no_std]` Rust (`kernel/src/arch/x86_64/paging.rs`), bringing hardware-enforced memory safety, canonical address filtering, and fine-grained page protections.
+
+```text
++-----------------------------------------------------------------------------------------+
+|                              48-Bit Virtual Address Translation                          |
++-----------------------------------------------------------------------------------------+
+| Bits 63:48       | Bits 47:39  | Bits 38:30  | Bits 29:21  | Bits 20:12  | Bits 11:0     |
+| Sign-Extension   | PML4 Index  | PDPT Index  | PD Index    | PT Index    | Page Offset   |
+| (Canonical Check)| (9 bits)    | (9 bits)    | (9 bits)    | (9 bits)    | (12 bits)     |
++------------------+-------------+-------------+-------------+-------------+---------------+
+         |                |             |             |             |              |
+         v                v             v             v             v              v
+   Canonical Check   CR3 -> PML4   -> PDPT       -> PD         -> PT        -> Physical Frame
+                           (512 entries) (512 entries) (512 entries) (512 entries) (4KB / 2MB / 1GB)
+```
+
+## Architectural Features
+
+1. **48-Bit Virtual Address Space (256 TB)**:
+   - Full 4-level paging hierarchy (`PML4` -> `PDPT` -> `PD` -> `PT`).
+   - Lower Half: `0x0000_0000_0000_0000` .. `0x0000_7FFF_FFFF_FFFF` (128 TB user space).
+   - Higher Half: `0xFFFF_8000_0000_0000` .. `0xFFFF_FFFF_FFFF_FFFF` (128 TB kernel space).
+   - Sign-extended canonical address filtering (`VirtualAddress::is_canonical()`) rejecting all non-canonical addresses with bit 47 sign-extension mismatch.
+
+2. **Hardware NX (No-Execute) Protection**:
+   - Bit 63 (`PageTableFlags::NO_EXECUTE`) active on all stack, heap, and data frames.
+   - Requires `EFER.NXE` (bit 11 in `IA32_EFER MSR 0xC0000080`).
+   - Guarantees strict $W \oplus X$ (Write XOR Execute) hardware enforcement across kernel and user address spaces.
+
+3. **Dual Virtual Address Mappings**:
+   - **Identity Mapping (0 .. 4GB physical)**:
+     - PML4 index `0` maps directly to low physical memory using 2MB huge pages (`PageTableFlags::HUGE_PAGE | PRESENT | WRITABLE | GLOBAL`).
+     - Ensures seamless transition for bootloader, device DMA buffers, and memory-mapped I/O regions.
+   - **Higher-Half Kernel Base (`0xFFFF_8000_0000_0000`)**:
+     - PML4 index `256` maps the kernel address space into the higher half.
+     - Protects the kernel virtual space completely from userland interference.
+
+4. **Zero-Unsafe Page Table Walker**:
+   - `PageTableWalker` implements translation resolution without raw pointers or undefined behavior.
+   - Transparently handles standard 4KB pages, 2MB huge pages (bit 7 set in PD entry), and 1GB huge pages (bit 7 set in PDPT entry).
+   - Computes physical base addresses and intra-page offsets with full bounds checking.
+
+5. **Page Fault Error Code (PFEC) Validator**:
+   - Decodes hardware error code bits pushed to the interrupt stack on `#PF` (Vector 14):
+     - `P` (bit 0): Present flag violation.
+     - `W/R` (bit 1): Write access violation (1 = write, 0 = read).
+     - `U/S` (bit 2): User-mode access violation (1 = user CPL 3, 0 = supervisor).
+     - `RSVD` (bit 3): Reserved bit violation in page table entries.
+     - `I/D` (bit 4): Instruction fetch violation (NX violation).
+     - `PK` (bit 5): Protection key violation.
+     - `SS` (bit 6): Shadow stack access violation.
+
+6. **Long Mode Register Activation State**:
+   - `CR4`: Sets `CR4_PAE` (bit 5), `CR4_PSE` (bit 4), and `CR4_PGE` (bit 7).
+   - `EFER MSR`: Sets `EFER_LME` (bit 8, Long Mode Enable), `EFER_NXE` (bit 11, NX Enable), and `EFER_SCE` (bit 0, Syscall Enable).
+   - `CR0`: Sets `CR0_PG` (bit 31, Paging Enable), `CR0_PE` (bit 0, Protection Enable), and `CR0_WP` (bit 16, Write Protect).
+   - `CR3`: Holds the 4KB-aligned physical address of the PML4 root table.
+
+## Rust Data Types & API
+
+```rust
+pub struct VirtualAddress(pub u64);
+pub struct PhysicalAddress(pub u64);
+
+pub struct PageTableFlags(pub u64);
+impl PageTableFlags {
+    pub const PRESENT: Self = Self(1 << 0);
+    pub const WRITABLE: Self = Self(1 << 1);
+    pub const USER_ACCESSIBLE: Self = Self(1 << 2);
+    pub const WRITE_THROUGH: Self = Self(1 << 3);
+    pub const CACHE_DISABLE: Self = Self(1 << 4);
+    pub const ACCESSED: Self = Self(1 << 5);
+    pub const DIRTY: Self = Self(1 << 6);
+    pub const HUGE_PAGE: Self = Self(1 << 7);
+    pub const GLOBAL: Self = Self(1 << 8);
+    pub const NO_EXECUTE: Self = Self(1 << 63);
+}
+
+pub struct PageTable {
+    pub entries: [PageTableEntry; 512],
+}
+
+pub struct PageTableWalker;
+impl PageTableWalker {
+    pub fn translate(pml4: &PageTable, vaddr: VirtualAddress) -> Result<TranslationResult, &'static str>;
+}
+```
+
+## Verification & Self-Test
+
+- **Host-Side Unit Tests**:
+  ```bash
+  make paging64-test
+  # Output:
+  # --- kernel/src/arch/x86_64/paging.rs host tests (Pure Rust x86_64 Long Mode Paging) ---
+  # test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+  # [PASS] All kernel/src/arch/x86_64/paging.rs host tests succeeded.
+  ```
+- **Kernel Boot Integration**:
+  ```text
+  [ OK ] Pure Rust x86_64 Long Mode & PML4 4-level paging engine initialized (48-bit address space, NX, 2MB/1GB huge pages, higher-half base 0xFFFF800000000000)
+  ```
+- **Automated Test Runner**:
+  - `[PASS] x86_64_long_mode_paging`: Verified in both Desktop and Server build profiles.
+MD
+                    ],
+                ],
+            ],
+            [
                 'title' => 'User Guide & Desktop Applications',
                 'slug' => 'user-guide-and-applications',
                 'description' => 'Comprehensive user manual for the NovaOS desktop environment, window manager, and ring-3 applications.',
