@@ -3040,6 +3040,101 @@ test result: ok. 6 passed; 0 failed; 0 ignored; finished in 0.21s
 ```
 MD
                     ],
+                    [
+                        'title' => 'Windows Action Center & Notification Flyout',
+                        'slug' => 'windows-action-center-and-notification-flyout',
+                        'kind' => 'architecture',
+                        'summary' => 'Pure Rust interactive notification center and quick settings drawer (nova-shell) sliding in from the right edge: rich push notifications with actionable buttons, persistent notification history archive, transient bottom-right banner toasts, and a 6-tile Quick Settings grid.',
+                        'content' => <<<'MD'
+# Windows Action Center & Notification Flyout
+
+NovaOS 2.0 expands `nova-shell` with the **Action Center & Notification Flyout** (`userland/desktop/nova-shell/src/action_center.rs`), a unified management hub sliding in from the right screen edge. Combining the convenience of Windows 11 Action Center with macOS Notification Center aesthetics, it provides system alert triage, interactive push notifications, and quick hardware toggles.
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│ Quick Settings                                               │
+│ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐    │
+│ │ [📶] Wi-Fi     │ │ [ᛒ] Bluetooth  │ │ [🌙] Dark Mode │    │
+│ └────────────────┘ └────────────────┘ └────────────────┘    │
+│ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐    │
+│ │ [💡] Night Lgt │ │ [🔕] Focus/DND │ │ [✈️] Airplane  │    │
+│ └────────────────┘ └────────────────┘ └────────────────┘    │
+│ Brightness: [═══════════════════════════════════════○] 85%  │
+│ Volume:     [═════════════════════════════════○      ] 75%  │
+├──────────────────────────────────────────────────────────────┤
+│ Notifications                                 [Clear all]    │
+│ ┌──────────────────────────────────────────────────────────┐ │
+│ │ 💻 Terminal                                     Just now │ │
+│ │ build: complete - kernel/build success in 1.4s           │ │
+│ │                                    [ Reply ]  [ Open ]   │ │
+│ └──────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 1. Architectural Highlights
+
+### A. Slide-In Acrylic Right Drawer
+- **Geometry & Animation**: 360px width drawer spanning from the top menu bar (28px) to the taskbar (48px). Uses a smooth cubic easing curve (`slide_offset`) from off-screen right edge (`1024px`) to docked right (`664px`).
+- **Material Design**: Fluent acrylic blur convolving desktop wallpaper and background application surfaces, framed by Level 4 elevation shadows and a delicate 1px left border (`tokens.border_subtle`).
+- **Activation**: Summoned via `Super + N` or `Win + A`, or by clicking the top menu bar clock/calendar status indicator.
+
+### B. Rich Push Notifications & Banner Toasts
+- **Transient Banner Toasts**: New incoming alerts pop up in the bottom-right corner (320x76px) above the taskbar, stacking up to 3 active toasts with 5-second countdown timers (`DEFAULT_TOAST_TTL_TICKS = 300`).
+- **Actionable Buttons**: Notifications support interactive response pills (e.g. `[ Open ]`, `[ Reply ]`, `[ Dismiss ]`) that trigger IPC action dispatches directly from the toast without opening the source application.
+- **Urgency Classification**:
+  - `Low`: Silent logging to history drawer.
+  - `Normal`: Standard banner toast with auto-dismiss countdown.
+  - `Critical`: Vibrant crimson indicator stripe (`#E81123`), overriding quiet hours.
+
+### C. Configurable Quiet Hours & Focus Assist (Do Not Disturb)
+- Toggling **Do Not Disturb (DND)** suppresses intrusive banner toasts during gaming, meetings, or coding sessions.
+- Incoming alerts quietly land in the persistent history archive, badging the status indicator until explicitly reviewed.
+
+### D. 6-Tile Quick Settings Grid & System Sliders
+1. **Wi-Fi**: Wireless radio toggle with live SSID and IP status.
+2. **Bluetooth**: Peripheral radio toggle with device connection telemetry.
+3. **Dark Mode**: Live theme palette switcher between Dark and Light Fluent tokens.
+4. **Night Light**: Display blue-light warmth filter toggle.
+5. **Do Not Disturb (DND)**: Focus assist toast suppression.
+6. **Airplane Mode**: Master hardware killswitch disabling all wireless transmitters simultaneously.
+7. **Interactive Sliders**: Display Brightness and Intel HDA Sound Volume track hit-testing.
+
+---
+
+## 2. Host Test Runner & Verification
+
+Verified via `cargo test` and `make nova-shell-test`:
+
+```text
+--- userland/desktop/nova-shell host tests (Top Menu Bar, Taskbar & Action Center) ---
+running 17 tests
+test action_center::tests::test_action_center_drawer_toggle_and_slide ... ok
+test action_center::tests::test_quick_settings_grid_toggles ... ok
+test action_center::tests::test_push_notifications_and_toasts ... ok
+test menubar::tests::test_menubar_initialization_and_layout ... ok
+test menubar::tests::test_dynamic_window_focus_change ... ok
+test menubar::tests::test_menu_scrubbing_and_click_toggle ... ok
+test action_center::tests::test_do_not_disturb_toast_suppression ... ok
+test taskbar::tests::test_badge_notifications ... ok
+test menubar::tests::test_keyboard_accelerators ... ok
+test taskbar::tests::test_live_window_thumbnail_preview_and_close ... ok
+test taskbar::tests::test_pinning_and_unpinning ... ok
+test taskbar::tests::test_magnification_physics_and_bounce ... ok
+test taskbar::tests::test_taskbar_initialization_and_alignment ... ok
+test taskbar::tests::test_running_indicators_and_multi_window ... ok
+test menubar::tests::test_menubar_rendering ... ok
+test taskbar::tests::test_taskbar_rendering ... ok
+test action_center::tests::test_action_center_rendering ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; finished in 0.34s
+[*] Running nova-shell selftest...
+[+] nova-shell selftest: PASSED
+[PASS] All 17 NovaOS Desktop Shell (nova-shell) tests passed successfully.
+```
+MD
+                    ],
 
 
                 ],
