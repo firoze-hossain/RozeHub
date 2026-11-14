@@ -2967,6 +2967,79 @@ test result: ok. 22 passed; 0 failed; 0 ignored; finished in 0.01s
 ```
 MD
                     ],
+                    [
+                        'title' => 'macOS Spotlight-Style Universal Instant Search',
+                        'slug' => 'macos-spotlight-style-universal-instant-search',
+                        'kind' => 'architecture',
+                        'summary' => 'Pure Rust universal instant search overlay and real-time indexer (nova-search) summoned by Super+Space or Ctrl+Space: sub-millisecond (<10ms) fuzzy matching across apps, documents, settings panels, shell commands, and instant inline math & unit conversions.',
+                        'content' => <<<'MD'
+# macOS Spotlight-Style Universal Instant Search (nova-search)
+
+NovaOS 2.0 introduces `nova-search` (`userland/desktop/nova-search/src/indexer.rs` and `lib.rs`), an instantaneous global search overlay inspired by the keyboard-first ergonomics of macOS Spotlight and Alfred. Summoned anywhere across the desktop environment via `Super + Space` or `Ctrl + Space`, `nova-search` provides sub-millisecond fuzzy search, system settings jumping, document lookup, shell execution, and instant inline math calculation.
+
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│  🔍  42 * 1024                                                                        │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│  =   = 43008                                                       [ Calculator ]     │
+│  📁  Files                                                         [ App ]            │
+│  💻  Terminal                                                      [ App ]            │
+│  📝  Text Editor                                                   [ App ]            │
+│  ⚙️   Display Settings                                              [ Setting ]        │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 1. Architectural Highlights
+
+### A. Centered Acrylic Floating Modal
+- **Visual Design**: 640px floating card rendered with Level 4 elevation shadows (`render_elevated_card`), acrylic convolution blur (`apply_gaussian_blur`), and a 30% translucent backdrop scrim over active applications.
+- **Shortcut Activation**: Registered as a global compositor keybinding for `Super + Space` and `Ctrl + Space`. Pressing `Escape` immediately dismisses the modal and returns focus to the previous active window.
+
+### B. High-Performance Fuzzy Match Indexer
+- **Sub-10ms Match Pacing**: Traverses in-memory B-tree indexes, scoring candidate queries with exact match bonuses (+2000), exact prefix bonuses (+1000), consecutive character multipliers, and word-boundary bonuses (+80).
+- **Multi-Category Coverage**:
+  1. **Applications**: Instant launching for `FILES.ELF`, `TERM.ELF`, `EDIT.ELF`, `SETTINGS.ELF`, `STORE.ELF`, `SYSINFO.ELF`, `ACTMON.ELF`, `KLOG.ELF`, `CRASHREP.ELF`.
+  2. **System Settings**: Direct deep-linking into specific preference panels (`Display`, `Audio`, `Network`, `Users`, `Firewall`).
+  3. **Documents & Files**: Direct indexing for `/DOCUMENTS/README.TXT`, `/SYSTEM.CFG`, `/USERS.CFG`, source files, and packages.
+  4. **Shell Commands**: Direct execution for POSIX utilities (`ping`, `ls`, `cat`, `nslookup`, `shutdown`).
+
+### C. Instant Inline Math & Unit Calculator
+- **Arithmetic Expression Engine**: Built-in recursive-descent parser evaluating `+`, `-`, `*`, `/`, `%`, `^`, parentheses, and mathematical functions (`sqrt(x)`, `abs(x)`).
+- **Natural Unit Conversions**:
+  - Digital Storage: `KB to MB`, `GB to MB`, `MB to GB`, `GB to TB`.
+  - Temperature: `°F to °C`, `°C to °F` (e.g. `72 F to C` -> `22.2 °C`).
+  - Distance & Length: `km to miles`, `miles to km`, `in to cm`, `cm to in`, `m to ft`, `ft to m`.
+- **Top Priority Promotion**: When a query evaluates to a valid mathematical expression or unit conversion, the result is dynamically prepended as the #1 ranked result item.
+
+### D. Keyboard-First Navigation
+- `Arrow Down` / `Arrow Up`: Moves highlight selection through the ranked result list.
+- `Enter`: Executes the selected action (spawns application, opens document in editor, opens settings panel, or copies calculation result).
+
+---
+
+## 2. Host Test Runner & Verification
+
+Verified via `cargo test` and `make nova-search-test`:
+
+```text
+--- userland/desktop/nova-search host tests (Spotlight Instant Search & Calculator) ---
+running 6 tests
+test tests::test_spotlight_lifecycle ... ok
+test tests::test_fuzzy_search_applications ... ok
+test tests::test_keyboard_navigation_and_enter ... ok
+test tests::test_inline_math_expressions ... ok
+test tests::test_unit_conversions ... ok
+test tests::test_spotlight_rendering ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; finished in 0.21s
+[*] Running nova-search selftest...
+[+] nova-search selftest: PASSED
+[PASS] All 6 macOS Spotlight Instant Search (nova-search) tests passed successfully.
+```
+MD
+                    ],
 
 
                 ],
