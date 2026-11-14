@@ -2877,6 +2877,96 @@ test result: ok. 12 passed; 0 failed; 0 ignored; finished in 0.04s
 ```
 MD
                     ],
+                    [
+                        'title' => 'Windows 11 Snap Layouts & Tiling Grid Window Management',
+                        'slug' => 'windows-11-snap-layouts-and-tiling-grid-window-management',
+                        'kind' => 'architecture',
+                        'summary' => 'Pure Rust intelligent window snapping and tiling grid subsystem (nova-compositor) implementing Windows 11 snap layouts: interactive maximize button hover overlay, 4 snap templates (50/50, 1/3-2/3, 2x2 quadrants, 3 columns), synchronized neighboring window resizing, and pre-snap geometry restoration.',
+                        'content' => <<<'MD'
+# Windows 11 Snap Layouts & Tiling Grid Window Management
+
+NovaOS 2.0 introduces Windows 11 Snap Layouts & Tiling Grid Window Management (`userland/desktop/nova-compositor/src/snap.rs`), bringing fluid, proportional window tiling directly to the Wayland display server. Designed for power users, developers, and multi-monitor productivity, the snap engine provides interactive maximize button dwelling overlays, edge/corner gestures, synchronized multi-window border resizing, and instant pre-snap geometry restoration.
+
+```text
+┌────────────────────────────────────────────────────────┐
+│  Interactive Snap Layout Overlay Card                  │
+│  ┌───────────────────────┐   ┌───────────────────────┐ │
+│  │       50 / 50         │   │     1/3  |  2/3       │ │
+│  │   [ 50% ] | [ 50% ]   │   │   [ 33% ]| [  67%  ]  │ │
+│  └───────────────────────┘   └───────────────────────┘ │
+│  ┌───────────────────────┐   ┌───────────────────────┐ │
+│  │    2x2 Quadrants      │   │       3 Columns       │ │
+│  │   [ TL ]  | [ TR ]    │   │ [ 33% ]|[ 33% ]|[ 33% ]│ │
+│  │  ─────────┼─────────  │   │        |       |       │ │
+│  │   [ BL ]  | [ BR ]    │   │        |       |       │ │
+│  └───────────────────────┘   └───────────────────────┘ │
+└────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 1. Architectural Highlights
+
+### A. Maximize Button Hover Dwell Detection
+- **Dwelling State Machine**: When the user hovers the cursor over a window's titlebar maximize button (`DamageRect`), `update_maximize_hover()` tracks dwelling duration at 60Hz.
+- **Threshold Trigger**: After ~300ms (`MAXIMIZE_HOVER_DWELL_TICKS = 18`), the interactive `SnapOverlayCard` appears anchored beneath the maximize button.
+- **Hysteresis Buffer**: Includes a 14px boundary margin so rapid mouse navigation between the button and template tiles never causes unintended card flicker or dismissal.
+
+### B. Interactive 4-Template Snap Layout Card
+The overlay card renders four distinct proportional tiling templates, each featuring dedicated hit-testing sub-tiles:
+1. **50 / 50 Split Template**: Vertical half-screen split (`SplitLeft50`, `SplitRight50`).
+2. **1/3 - 2/3 Split Template**: Primary code/reading area alongside reference (`SplitOneThirdLeft`, `SplitTwoThirdsRight`).
+3. **2x2 Quadrants Template**: Four-corner multitasking grid (`QuadrantTopLeft`, `QuadrantTopRight`, `QuadrantBottomLeft`, `QuadrantBottomRight`).
+4. **3-Column Template**: Tri-column workflow for ultrawide displays (`ColumnThreeLeft`, `ColumnThreeCenter`, `ColumnThreeRight`).
+
+Hovering any sub-tile instantly highlights it in accent blue (`0xFF0078D4`) and projects a live semi-transparent ghost preview overlay across the target workspace screen region.
+
+### C. Screen Edge & Corner Drag Gestures
+- **Edge Snapping**: Dragging a window surface to the left screen edge triggers `SplitLeft50`, right edge triggers `SplitRight50`, and top edge triggers `Maximize`.
+- **Corner Snapping**: Dragging to any of the four 40px screen corners (`SNAP_CORNER_THRESHOLD = 40`) snaps the window into that quadrant (25% screen area).
+
+### D. Tiling Grid & Synchronized Neighboring Window Resizing
+- **`TilingGrid` Topology**: Tracks up to 16 concurrently snapped windows with their associated layouts, pre-snap floating geometry, and current presentation rects.
+- **Synchronized Split Boundary Resizing**: When two complementary windows share a border (e.g. `SplitLeft50` and `SplitRight50`), dragging the dividing line invokes `resize_tiling_grid_boundary(cursor_x)`. Both neighboring windows are resized simultaneously in real time without gap artifacts or overlaps.
+- **Pre-Snap Geometry Restoration**: Dragging or un-snapping a tiled window instantly restores its pre-snap floating position and size (`unsnap_window()`).
+
+---
+
+## 2. Host Test Runner & Verification
+
+Verified via `cargo test` and `make compositor-test`:
+
+```text
+--- userland/desktop/nova-compositor host tests (Wayland Display Server & Snap Layouts) ---
+running 22 tests
+test drm_backend::tests::test_hardware_cursor_plane_isolation ... ok
+test drm_backend::tests::test_drm_page_flip_vblank_synchronization ... ok
+test drm_backend::tests::test_zero_copy_direct_scanout_qualification ... ok
+test scale::tests::test_edid_dpi_detection ... ok
+test scale::tests::test_coordinate_scaling_round_trip ... ok
+test protocol::tests::test_event_serialization ... ok
+test security::tests::test_buffer_isolation_blocks_rogue_buffer_peeking ... ok
+test security::tests::test_keystroke_isolation_prevents_keylogger ... ok
+test snap::tests::test_all_four_snap_templates_hit_testing ... ok
+test security::tests::test_screen_capture_and_injection_permissions ... ok
+test protocol::tests::test_wire_header_round_trip ... ok
+test snap::tests::test_maximize_hover_dwelling_and_snap_menu ... ok
+test snap::tests::test_snap_card_interactive_hit_testing_and_selection ... ok
+test snap::tests::test_synchronized_border_resizing_in_grid ... ok
+test snap::tests::test_snap_edge_gestures ... ok
+test snap::tests::test_tiling_grid_and_unsnap_restoration ... ok
+test snap::tests::test_workspace_usable_area ... ok
+test surface::tests::test_damage_rect_union_and_clip ... ok
+test surface::tests::test_double_buffered_commit_atomicity ... ok
+test surface::tests::test_subsurface_management ... ok
+test surface::tests::test_surface_role_validation ... ok
+test snap::tests::test_ghost_preview_and_menu_rendering ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; finished in 0.01s
+[PASS] All 24 Wayland display server (nova-compositor) tests passed successfully.
+```
+MD
+                    ],
 
 
                 ],
