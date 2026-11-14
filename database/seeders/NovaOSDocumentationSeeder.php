@@ -2799,6 +2799,84 @@ test result: ok. 5 passed; 0 failed; 0 ignored; finished in 0.05s
 ```
 MD
                     ],
+                    [
+                        'title' => 'Windows 11-Style Centered Dynamic Taskbar & Application Dock',
+                        'slug' => 'windows-11-style-centered-dynamic-taskbar-and-application-dock',
+                        'kind' => 'architecture',
+                        'summary' => 'Pure Rust modern centered dynamic taskbar and application dock (nova-shell) combining Windows 11 aesthetics and macOS dock behavior: pinned/running apps, active dot indicators, live window thumbnail previews, badge notifications, bounce/zoom animations, and customizable alignment.',
+                        'content' => <<<'MD'
+# Windows 11-Style Centered Dynamic Taskbar & Application Dock
+
+NovaOS 2.0 expands `nova-shell` with a modern centered dynamic taskbar and application dock (`userland/desktop/nova-shell/src/taskbar.rs` and `dock.rs`). Synthesizing the visual cleanliness and symmetrical balance of Windows 11 Fluent Design with the fluid tactile responsiveness of the macOS application dock, this subsystem delivers instantaneous visual recognition, live window thumbnails, and low-friction multitasking.
+
+```text
+       ┌────────────────────────────────────────────────────────────────────────────────────────┐
+       │   [⊞]   [🔍]    [📁]     [💻]     [📝]     [⚙️]     [🛍️]     [🌐]                  │
+       │                   ●       ●●      ▬▬                                           │
+       └────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 1. Architectural Highlights
+
+### A. Centered & Left Dynamic Layout Alignment
+- **Customizable Alignment**: Supports `TaskbarAlignment::Centered` (Windows 11 default) and `TaskbarAlignment::Left` (classic Windows 10/Linux desktop).
+- **Cluster Geometry**: Automatically calculates horizontal coordinates for Start Launcher button (38px), Quick Search pill (38px), and dock items (40px with 8px gaps), maintaining strict horizontal centering or left margin docking.
+
+### B. Pinned & Running Applications with Active Dot Indicators
+- **Hybrid Pinned & Dynamic App Lifecycle**: Fixed pinned launchers (`FILES.ELF`, `TERM.ELF`, `EDIT.ELF`, `SETTINGS.ELF`, `STORE.ELF`) persist across reboots. Unpinned running applications dynamically enter the dock when launched and cleanly exit when all surfaces terminate.
+- **Active Running Indicators**:
+  - **Single Instance**: Small subtle indicator dot (`●`) below icon.
+  - **Multi-Window Instance**: Double indicator dot (`● ●`) for applications with multiple active windows.
+  - **Focused Window**: Glowing vibrant accent pill (`▬▬`, 16x3px) identifying the active window with foreground keyboard/mouse focus.
+
+### C. Live Window Thumbnail Previews from Compositor
+- **Downscaled Surface Capture**: Nova compositor captures downscaled miniature surfaces (e.g. 160x100 XRGB8888 buffers) and syncs them over IPC to `sync_window_surface()`.
+- **Floating Hover Flyout Card**: Hovering over a running application icon summons an elevated popover card floating above the taskbar.
+- **Interactive Multi-Window Carousel**: Displays miniature live window previews, window titles, close button (`✕`) for instant process termination, and minimize button (`—`). Clicking any thumbnail immediately transfers focus to that window surface.
+
+### D. Badge Notifications & Visual Alerts
+- Supports numerical badge indicators (e.g. unread terminal jobs, network alerts).
+- Renders crimson capsule badges (`#E81123`) in the top-right corner of dock icons with high-contrast indicator pips.
+
+### E. macOS-Style Magnification & Launch Bounce Physics
+- **Smooth Magnification Curve**: Uses Gaussian falloff across adjacent icons (`calculate_icon_magnification`) up to 1.35x zoom when the cursor tracks across the bottom dock.
+- **Launch Bounce Physics**: Simulates elastic launch bounce with vertical impulse (`-12.0`), gravitational acceleration (`1.2`), and restitution coefficient (`-0.62`), providing organic visual feedback during app initialization.
+
+### F. Fluent Acrylic Backdrop & Level 3 Elevation
+- Bottom taskbar rendered with acrylic Gaussian convolution blur and subtle top highlight border (`border_subtle`).
+- Window thumbnail hover cards feature Level 3 elevation shadows (`render_elevated_card`) and delicate rounded corners.
+
+---
+
+## 2. Host Test Runner & Verification
+
+Verified via `cargo test` and `make nova-shell-test`:
+
+```text
+--- userland/desktop/nova-shell host tests (Top Menu Bar, Centered Taskbar & Dock) ---
+running 12 tests
+test menubar::tests::test_menubar_initialization_and_layout ... ok
+test menubar::tests::test_keyboard_accelerators ... ok
+test taskbar::tests::test_taskbar_initialization_and_alignment ... ok
+test taskbar::tests::test_pinning_and_unpinning ... ok
+test taskbar::tests::test_badge_notifications ... ok
+test menubar::tests::test_menu_scrubbing_and_click_toggle ... ok
+test taskbar::tests::test_magnification_physics_and_bounce ... ok
+test taskbar::tests::test_live_window_thumbnail_preview_and_close ... ok
+test menubar::tests::test_dynamic_window_focus_change ... ok
+test taskbar::tests::test_running_indicators_and_multi_window ... ok
+test menubar::tests::test_menubar_rendering ... ok
+test taskbar::tests::test_taskbar_rendering ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; finished in 0.04s
+[*] Running nova-shell selftest...
+[+] nova-shell selftest: PASSED
+[PASS] All 12 NovaOS Desktop Shell (nova-shell) tests passed successfully.
+```
+MD
+                    ],
 
 
                 ],
