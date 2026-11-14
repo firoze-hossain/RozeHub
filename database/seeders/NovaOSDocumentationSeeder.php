@@ -2736,6 +2736,69 @@ Parses the 32-bit `CONFIG_DEFAULT` register:
   - 10/10 tests passed with `/dev/snd/pcm0p` and `/dev/snd/pcm0c` dcache resolution.
 MD
                     ],
+                    [
+                        'title' => 'macOS-Style Persistent Unified Top Menu Bar',
+                        'slug' => 'macos-style-persistent-unified-top-menu-bar',
+                        'kind' => 'architecture',
+                        'summary' => 'Pure Rust persistent 28px unified top menu bar (nova-shell) delivering macOS ergonomics: dynamic application menu hierarchy synchronized over IPC, interactive menu scrubbing, keyboard accelerators, and right-aligned system status indicators.',
+                        'content' => <<<'MD'
+# macOS-Style Persistent Unified Top Menu Bar (nova-shell)
+
+NovaOS 2.0 introduces `nova-shell` (`userland/desktop/nova-shell/src/menubar.rs`), a global persistent top menu bar modeled after the visual clarity and ergonomic efficiency of macOS Sequoia and Windows 11 Fluent Design. Rendered as a persistent 28-pixel top bar with real-time acrylic backdrop blur and a delicate bottom border, `nova-shell` maximizes usable window client area while providing unified keyboard accelerator navigation and instant one-click system telemetry.
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ [NovaOS]  Text Editor   File   Edit   View   Window   Help                   │ 12:45 PM   [Wi-Fi: 192.168.1.50]   [Vol: 75%]   [Bat: 98% ⚡]   [FH] │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 1. Core Architectural Pillars
+
+### A. Dynamic Application Menu Hierarchy
+- **Window Focus Synchronization**: Subscribes to focus transition notifications from `nova-compositor`. When the user switches active client surfaces, `TopMenuBar::update_active_app(window_id, app_name, categories)` queries the focused application's menu hierarchy over Unix domain socket IPC and re-lays out the bar in sub-millisecond time.
+- **NovaOS System Menu**: Displays the persistent `[NovaOS]` system logo menu on the far left, offering global access to *About NovaOS*, *System Settings...*, *App Store...*, *Force Quit...*, *Sleep*, *Restart...*, *Shut Down...*, and *Lock Screen* (`⌃⌘Q`).
+- **Standardized Categories**: Standardized menu hierarchy categories (`File`, `Edit`, `View`, `Window`, `Help`) with keyboard shortcuts (`⌘N`, `⌘O`, `⌘S`, `⌘Z`, `⌘X`, `⌘C`, `⌘V`, `⌘W`, `⌘Q`).
+
+### B. Interactive macOS-Style Menu Scrubbing
+- **Click-to-Open**: Clicking any menu category opens its dropdown popover card.
+- **Scrubbing Navigation**: Once any dropdown is active, moving the mouse pointer across adjacent categories automatically closes the current popover and opens the hovered category instantly without requiring additional mouse clicks.
+- **Dismissal**: Clicking outside the menu bounds or clicking the active category header dismisses the open dropdown.
+
+### C. Right-Aligned System Status Indicators & Flyouts
+1. **Clock & Calendar Flyout**: Live system time display (`12:45 PM`); clicking toggles a detailed date, time, and month view calendar card.
+2. **Network Indicator**: Dynamic connection pill (Ethernet / Wi-Fi SSID / Disconnected) with IPv4 address badge; flyout provides network interface toggle and IP switcher.
+3. **Audio Volume Slider & Mute**: Speaker glyph with current output level percentage (`75%`); flyout features interactive volume slider, mute toggle, and output device selector.
+4. **Battery Level & Power**: Charge percentage (`98%`) with dynamic charging bolt (`⚡`) glyph; flyout displays battery health, estimated runtime, and power profiles (Efficiency / Balanced / High Performance).
+5. **User Account Pill**: Compact rounded avatar pill with user initials; flyout allows fast user switching, session locking, and sign-out.
+
+### D. Acrylic Blur & Level 3 Elevation
+- All dropdown popovers and system flyouts are rasterized with **Fluent Design Level 3 Elevation Shadows** (`render_elevated_card` with `ElevationTier::Level3`).
+- Backdrop areas utilize separable convolution Gaussian blur (`apply_gaussian_blur`) for frosted glassmorphism over desktop wallpaper and background application windows.
+
+---
+
+## 2. Host Test Runner & Verification
+
+`nova-shell` includes complete unit tests and automated host-side verification:
+
+```text
+--- userland/desktop/nova-shell host tests (macOS-Style Persistent Unified Top Menu Bar) ---
+running 5 tests
+test menubar::tests::test_menubar_initialization_and_layout ... ok
+test menubar::tests::test_dynamic_window_focus_change ... ok
+test menubar::tests::test_menu_scrubbing_and_click_toggle ... ok
+test menubar::tests::test_keyboard_accelerators ... ok
+test menubar::tests::test_menubar_rendering ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; finished in 0.05s
+[*] Running nova-shell selftest...
+[+] nova-shell selftest: PASSED
+[PASS] All macOS-Style Persistent Unified Top Menu Bar (nova-shell) tests passed successfully.
+```
+MD
+                    ],
 
 
                 ],
