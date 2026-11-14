@@ -2110,6 +2110,144 @@ make compositor-test
 MD
                     ],
                     [
+                        'title' => 'Modern UI Toolkit & Scene Graph (nova-ui in Pure Rust)',
+                        'slug' => 'modern-ui-toolkit-and-scene-graph-nova-ui',
+                        'kind' => 'architecture',
+                        'summary' => 'Retained-mode reactive UI framework and scene graph in pure Rust featuring flexbox layout engine, SDF rounded rectangles, Bezier curve rasterization, Gaussian blur & box shadow shaders, acrylic backdrop filters, responsive event routing, and declarative widget macros (Button, Slider, TextInput, List, Table, Tabs, Modal).',
+                        'content' => <<<'MD'
+# Modern UI Toolkit & Scene Graph (nova-ui in Pure Rust)
+
+`nova-ui` is NovaOS's next-generation, high-performance UI toolkit and retained-mode scene graph implemented in pure `#![no_std]` Rust under `userland/libs/nova-ui/`. Designed to standardize graphical application development across the operating system, it provides a CSS-compatible flexbox layout engine, vector shape rasterization with subpixel anti-aliasing, hardware-accelerated shaders for blur and drop shadows, and reactive state bindings.
+
+```text
++-----------------------------------------------------------------------------------+
+|                        Application Logic & Reactive State                         |
+|     Signal<T> (Reactive Variables)  <--->  Two-Way Bindings & Event Handlers      |
++-----------------------------------------------------------------------------------+
+                                      |
+                     Declarative UI Macros (row!, col!, etc.)
+                                      v
++-----------------------------------------------------------------------------------+
+|                            nova-ui Framework Stack                                |
+|  +--------------------+  +----------------------+  +---------------------------+  |
+|  | Flexbox Engine     |  | Retained Scene Graph |  | Responsive Event Router   |  |
+|  | - Row & Column     |  | - Node Hierarchy     |  | - Pointer Hit-Testing     |  |
+|  | - Flex Grow/Shrink |  | - Damage Region Union|  | - Active Pointer Capture  |  |
+|  | - Gap, Pad, Margin |  | - Z-Order Traversal  |  | - Focus & Key Dispatch    |  |
+|  +--------------------+  +----------------------+  +---------------------------+  |
+|                                     |                                             |
+|                     Vector Rasterizer & Shader Pipeline                           |
+|  - SDF Anti-Aliased Rounded Rects   - Quadratic & Cubic Bezier Paths              |
+|  - Fast Separable Gaussian Blur     - Acrylic Glassmorphic Backdrop Filters       |
+|  - Box Shadows with Blur & Spread   - Anti-Aliased Subpixel Glyph Text            |
++-----------------------------------------------------------------------------------+
+                                      |
+                           BufferSurface32 Scanout
+                                      v
++-----------------------------------------------------------------------------------+
+|                   nova-compositor / Wayland Wire Presentation                     |
++-----------------------------------------------------------------------------------+
+```
+
+---
+
+## 1. Architectural Highlights
+
+### CSS-Compatible Flexbox Layout Engine (`layout.rs`)
+`nova-ui` features an internal flexbox solver supporting responsive layouts without floating-point overhead or external CSS engines:
+- **Direction & Wrapping**: `FlexDirection::Row`, `Column`, `RowReverse`, and `ColumnReverse` with optional `FlexWrap::Wrap`.
+- **Justification & Alignment**: Full support for `JustifyContent` (`FlexStart`, `Center`, `FlexEnd`, `SpaceBetween`, `SpaceAround`, `SpaceEvenly`) and `AlignItems` (`FlexStart`, `Center`, `FlexEnd`, `Stretch`).
+- **Space Distribution**: Accurate `flex_grow` expansion into free space and `flex_shrink` compression under constraint deficits, honoring `flex_basis`, `min_width`/`max_width`, and `min_height`/`max_height`.
+- **Metrics**: Native pixel-perfect resolution for `EdgeInsets` (margins and paddings) and element `gap`.
+
+### Vector Shape Rasterization & SDF Shaders (`render.rs`)
+- **Signed Distance Field (SDF) Rounded Corners**: Computes Euclidean distance $d = \sqrt{dx^2 + dy^2}$ to corner circle centers, producing subpixel coverage factor $(r + 0.5 - d)$ that completely eliminates stair-stepping and jagged edges.
+- **Parametric Bezier Paths**: High-precision evaluation of quadratic $B(t) = (1-t)^2 P_0 + 2(1-t)t P_1 + t^2 P_2$ and cubic $B(t) = (1-t)^3 P_0 + 3(1-t)^2 t P_1 + 3(1-t)t^2 P_2 + t^3 P_3$ curves with subpixel anti-aliased antialiasing taps.
+- **Fast Separable Gaussian Blur**: Optimized 2-pass horizontal and vertical box/Gaussian filter with linear memory access patterns.
+- **Box Shadows**: Soft ambient and directional shadows with configurable offset $(dx, dy)$, blur radius, and spread distance using radial quadratic falloff $1 - (d/\text{blur})^2$.
+- **Acrylic Backdrop Filter**: Blurs background pixels underneath translucent containers and blends tinted scrim overlays for Windows 11 style acrylic and modal dialogs.
+
+### Retained-Mode Scene Graph & Damage Tracking (`scene.rs`)
+- **Hierarchical Node Tree**: Nodes maintain parent-child links, local/global transforms, clipping rectangles, and z-index ordering.
+- **Incremental Damage Tracking**: When a widget mutates, dirty flags (`dirty_paint`, `dirty_layout`) bubble up the tree, updating the `damage_region` bounding box union. Only affected screen areas are re-rasterized, achieving ultra-high rendering efficiency.
+- **Z-Ordered Hit-Testing**: Evaluates pointer interaction recursively from top-level overlays (highest z-index) down to base panels, respecting node clipping boundaries.
+
+### Responsive Event Routing & Dispatcher (`event.rs`)
+- **Pointer Event Lifecycle**: Manages `Down`, `Up`, `Move`, `Scroll`, `Click`, `Enter`, and `Leave`.
+- **Active Pointer Capture**: Locks pointer events to dragging widgets (such as slider thumbs and scrollbars) even when the cursor travels outside widget bounds.
+- **Focus Management**: Automatically sets and transfers keyboard focus on interaction, routing key combinations and character input to active widgets.
+
+### Declarative Widgets with Reactive State (`widget.rs`, `reactive.rs`)
+- **`ButtonWidget`**: Multi-state interactive buttons (Normal, Hovered, Pressed, Disabled) with drop shadows and rounded borders.
+- **`SliderWidget`**: Continuous and stepped value sliders with interactive drag tracking, colored track progress, and elevated thumb.
+- **`TextInputWidget`**: Editable text field supporting character insertion, backspace, selection, placeholder display, and blinking cursor bar.
+- **`ListWidget`**: Virtualized scrollable list with item click hit-testing, selection tracking, and card background.
+- **`TableWidget`**: Data table with customizable column widths, header row, alternating zebra-striped rows, and row selection.
+- **`TabsWidget`**: Multi-tab switcher with horizontal header distribution and animated accent indicator.
+- **`ModalWidget`**: Dialog window with acrylic backdrop blur dimmer, centered elevation card, drop shadow, and dismiss controls.
+- **`Signal<T>`**: Reactive primitive notifying subscribed scene graph nodes to schedule immediate re-renders upon value mutation.
+
+---
+
+## 2. Declarative Macro Syntax
+
+```rust
+use nova_ui::prelude::*;
+
+// Declarative layout with row! and col! macros
+let layout = col!(
+    gap: 12,
+    padding: 16,
+    children: [
+        row!(
+            gap: 8,
+            padding: 0,
+            children: [
+                button!("Save Changes"),
+                button!("Cancel"),
+            ]
+        ),
+        slider!(0.0, 100.0, 50.0),
+        text_input!("Enter server hostname..."),
+    ]
+);
+```
+
+---
+
+## 3. Verification & Test Suite
+
+```bash
+# Run standalone pure Rust unit & integration test suite
+make nova-ui-test
+
+# Output:
+# running 19 tests
+# test reactive::tests::test_signal_mutation_and_notification ... ok
+# test event::tests::test_click_and_hover_dispatch ... ok
+# test render::tests::test_bezier_curves ... ok
+# test render::tests::test_rounded_rect_sdf ... ok
+# test layout::tests::test_rect_math ... ok
+# test layout::tests::test_flex_grow_distribution ... ok
+# test render::tests::test_color_blend ... ok
+# test layout::tests::test_flexbox_row_layout ... ok
+# test scene::tests::test_hit_testing ... ok
+# test scene::tests::test_damage_region_tracking ... ok
+# test render::tests::test_gaussian_blur ... ok
+# test scene::tests::test_scene_graph_hierarchy ... ok
+# test widget::tests::test_button_widget_states ... ok
+# test tests::test_declarative_macros ... ok
+# test widget::tests::test_slider_widget_computation ... ok
+# test widget::tests::test_tabs_and_modal ... ok
+# test widget::tests::test_text_input_editing ... ok
+# test render::tests::test_box_shadow_shader ... ok
+# test tests::test_full_selftest_suite ... ok
+# test result: ok. 19 passed; 0 failed; 0 ignored; finished in 0.01s
+# [PASS] All 19 Modern UI Toolkit & Scene Graph (nova-ui) tests passed successfully.
+```
+MD
+                    ],
+                    [
                         'title' => 'Intel High Definition Audio (HDA) Driver & Sound Subsystem',
                         'slug' => 'intel-high-definition-audio-driver-and-sound-subsystem',
                         'kind' => 'architecture',
