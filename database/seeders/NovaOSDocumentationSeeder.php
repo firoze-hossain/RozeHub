@@ -2242,8 +2242,147 @@ make nova-ui-test
 # test widget::tests::test_text_input_editing ... ok
 # test render::tests::test_box_shadow_shader ... ok
 # test tests::test_full_selftest_suite ... ok
-# test result: ok. 19 passed; 0 failed; 0 ignored; finished in 0.01s
-# [PASS] All 19 Modern UI Toolkit & Scene Graph (nova-ui) tests passed successfully.
+# test result: ok. 25 passed; 0 failed; 0 ignored; finished in 0.01s
+# [PASS] All 25 Modern UI Toolkit, Scene Graph & Fluent/macOS Theme (nova-ui) tests passed successfully.
+```
+MD
+                    ],
+                    [
+                        'title' => 'Fluent Acrylic & macOS Material Design System',
+                        'slug' => 'fluent-acrylic-and-macos-material-design-system',
+                        'kind' => 'architecture',
+                        'summary' => 'Unified enterprise design language synthesizing Windows 11 Fluent Design (acrylic/mica materials, glassmorphism, accent palettes, 5-tier elevation shadows) and macOS Sequoia (rounded squircle corners 8-20px, delicate 1px borders, vibrant color scales, live dark/light theme switching with WCAG AA accessibility compliance).',
+                        'content' => <<<'MD'
+# Fluent Acrylic & macOS Material Design System
+
+NovaOS introduces a unified, enterprise-grade design system implemented in pure Rust under `userland/libs/nova-ui/src/theme/fluent_macos.rs`. Synthesizing the visual elegance of Windows 11 Fluent Design and macOS Sequoia, it delivers translucent acrylic materials, subtle mica backdrops, multi-tier elevation shadows, squircle corner geometries, vibrant accent palettes, and real-time Dark/Light theme switching with strict WCAG 2.1 AA accessibility compliance.
+
+```text
++-----------------------------------------------------------------------------------+
+|                        Fluent Acrylic & macOS Design System                       |
+|   Windows 11 Fluent Elegance          +          macOS Sequoia Polish             |
++-----------------------------------------------------------------------------------+
+|  - Acrylic & Mica Material Shaders    |  - Squircle Rounded Geometry (8-20px)     |
+|  - 5-Tier Smooth Elevation Shadows    |  - Delicate 1px Translucent Borders       |
+|  - Directional Key Light + Ambient    |  - Vibrant System Accent Color Scale      |
+|  - Glassmorphic Specular Reflections  |  - High-Contrast Dark & Light Palettes    |
++-----------------------------------------------------------------------------------+
+                                      |
+                     Dynamic Theme Manager (ThemeManager)
+                                      v
++-----------------------------------------------------------------------------------+
+|                               Design Tokens                                       |
+|  [ColorTokens]              [ElevationTier (0..5)]        [CornerTokens (0..9999)]|
+|  - Surface / Card / Scrim   - Ambient Soft Glow Blur      - 8px Button / Input    |
+|  - Text Primary/Secondary   - Directional Depth Shadow    - 10px Card / 16px Win  |
+|  - Acrylic / Mica Tints     - Spread & Dynamic Factor     - 20px Modal / Capsule  |
++-----------------------------------------------------------------------------------+
+                                      |
+                    WCAG 2.1 AA Relative Luminance & Contrast
+               Contrast Ratio: (L1 + 0.05) / (L2 + 0.05) >= 4.5:1
+                                      v
++-----------------------------------------------------------------------------------+
+|                          Render & Shader Pipeline                                 |
+|       render_acrylic_panel()             |          render_elevated_card()        |
++-----------------------------------------------------------------------------------+
+```
+
+---
+
+## 1. Architectural Highlights
+
+### Multi-Tier Elevation Shadows (Windows 11 Fluent)
+Elevation is modeled with dual-pass shadow layers combining a soft omnidirectional ambient glow with a directional key light:
+- **Level 0 (Flat)**: Flat surface, 0px offset, 0px blur.
+- **Level 1 (Subsurface / Card)**: $y = 2\text{px}$, blur $4\text{px}$ — resting cards and secondary content blocks.
+- **Level 2 (Hovered Card / Active Button)**: $y = 4\text{px}$, blur $8\text{px}$ — hover lift and responsive interactive surfaces.
+- **Level 3 (Popover / Dropdown)**: $y = 8\text{px}$, blur $16\text{px}$ — context menus, combo boxes, and floating flyouts.
+- **Level 4 (Floating Dialog)**: $y = 12\text{px}$, blur $24\text{px}$ — tool palettes and floating non-modal windows.
+- **Level 5 (Modal Alert)**: $y = 20\text{px}$, blur $36\text{px}$ — elevated system modal sheets and urgent alerts.
+
+### Squircle Corner Geometry (macOS Sequoia)
+Corner tokens emulate Apple's squircle curvature for smooth, natural visual flow:
+- `small` ($4\text{px}$): Status badges, chips, tags.
+- `medium` ($8\text{px}$): Primary buttons, sliders, text inputs.
+- `card` ($10\text{px}$): Standard cards, list items, settings tiles.
+- `large` ($12\text{px}$): Flyout popovers, tooltips.
+- `window` ($16\text{px}$): Application main windows.
+- `modal` ($20\text{px}$): System sheets and dialog panels.
+- `pill` ($9999\text{px}$): Capsules, search pills, floating action buttons.
+
+### Acrylic & Mica Glassmorphic Shaders
+- **Acrylic Panel (`render_acrylic_panel`)**: Applies a two-pass separable Gaussian blur convolution (radius $20\text{px}$) to background scanout memory, superimposes a chromatic tint scrim ($63\%$ opacity in dark mode, $72\%$ in light mode), and frames the surface with a $1\text{px}$ specular border highlight.
+- **Mica Material**: High-radius desktop tinting ($36\text{px}$ blur, $86\%$ opacity) connecting the application window titlebar harmoniously with the desktop wallpaper.
+
+### Dynamic Theme Management & WCAG AA Contrast
+- **Live Mode Toggle (`ThemeManager::toggle_theme`)**: Instantly swaps color tokens between Dark and Light themes. Subscribed scene graph nodes receive dirty paint notifications without requiring application re-instantiation.
+- **Vibrant Accent Palettes**: 9 system accent colors (`FluentBlue`, `SequoiaBlue`, `Purple`, `Pink`, `Red`, `Orange`, `Yellow`, `Green`, `Graphite`) with tailored hover, pressed, and subtle tint variations.
+- **Accessibility Verification**: Automated calculation of sRGB relative luminance $L = 0.2126 R + 0.7152 G + 0.0722 B$ ensuring all text tokens pass WCAG 2.1 AA requirements ($\ge 4.5:1$ contrast ratio).
+
+---
+
+## 2. Token Definitions & Usage
+
+```rust
+use nova_ui::prelude::*;
+
+// Initialize theme manager with macOS Sequoia Blue in Dark Mode
+let mut theme = ThemeManager::new(ThemeMode::Dark, AccentPalette::SequoiaBlue);
+
+// Subscribe node for live re-renders on theme toggle
+theme.subscribe(card_node_id);
+
+// Render an elevated card with Level 2 shadow and squircle corners
+render_elevated_card(
+    &mut surface,
+    Rect::new(20, 20, 320, 200),
+    theme.corners.card, // 10px
+    2,                  // Elevation level 2
+    &theme.elevation,
+    &theme.tokens,
+);
+
+// Toggle to Light Mode in response to user preference
+theme.toggle_theme(&mut scene_graph);
+```
+
+---
+
+## 3. Verification & Test Suite
+
+```bash
+# Run standalone pure Rust design system and theme test suite
+make nova-ui-test
+
+# Output:
+# running 25 tests
+# test event::tests::test_click_and_hover_dispatch ... ok
+# test layout::tests::test_flexbox_row_layout ... ok
+# test layout::tests::test_flex_grow_distribution ... ok
+# test layout::tests::test_rect_math ... ok
+# test render::tests::test_bezier_curves ... ok
+# test render::tests::test_color_blend ... ok
+# test scene::tests::test_damage_region_tracking ... ok
+# test render::tests::test_rounded_rect_sdf ... ok
+# test scene::tests::test_hit_testing ... ok
+# test render::tests::test_box_shadow_shader ... ok
+# test reactive::tests::test_signal_mutation_and_notification ... ok
+# test scene::tests::test_scene_graph_hierarchy ... ok
+# test render::tests::test_gaussian_blur ... ok
+# test tests::test_declarative_macros ... ok
+# test theme::fluent_macos::tests::test_elevation_tiers_shadows ... ok
+# test theme::fluent_macos::tests::test_live_theme_toggle ... ok
+# test widget::tests::test_tabs_and_modal ... ok
+# test theme::fluent_macos::tests::test_wcag_aa_contrast ... ok
+# test theme::fluent_macos::tests::test_corner_radii_tokens ... ok
+# test widget::tests::test_button_widget_states ... ok
+# test theme::fluent_macos::tests::test_theme_tokens_generation ... ok
+# test widget::tests::test_slider_widget_computation ... ok
+# test widget::tests::test_text_input_editing ... ok
+# test tests::test_full_selftest_suite ... ok
+# test theme::fluent_macos::tests::test_acrylic_and_elevated_card_rendering ... ok
+# test result: ok. 25 passed; 0 failed; 0 ignored; finished in 0.01s
+# [PASS] All 25 Modern UI Toolkit, Scene Graph & Fluent/macOS Theme (nova-ui) tests passed successfully.
 ```
 MD
                     ],
