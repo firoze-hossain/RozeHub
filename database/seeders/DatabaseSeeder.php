@@ -196,6 +196,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call(DocumentationSeeder::class);
         $this->call(StratosDBDocumentationSeeder::class);
+        $this->call(RozeLanguageV2DocumentationSeeder::class);
 
         $navigator = SoftwareProject::where('slug', 'dbnavigator')->first();
         Review::updateOrCreate(['software_project_id' => $navigator->id, 'author_name' => 'Mina R.'], ['rating' => 5, 'body' => 'The schema view is exactly the kind of calm visual feedback I want while exploring an unfamiliar database.', 'is_approved' => true]);
